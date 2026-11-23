@@ -63,12 +63,31 @@ class remote {
     /**
      * A QR code for a URL, as an inline SVG string (core_qrcode, TCPDF).
      *
+     * The QR code is a convenience next to the remote link, so a failure inside core's
+     * TCPDF encoder must not break the timer page: on any PHP warning or exception it
+     * returns '' and the page shows the link alone. (CI's PHP 8.4.28 job hit
+     * "Trying to access array offset on null" in tcpdf/include/barcodes/qrcode.php:761
+     * for http://localhost:8000/mod/fancytimer/remote.php?id=109000, which encodes
+     * cleanly on PHP 8.4.24 and 8.3.)
+     *
      * @param moodle_url $url
-     * @return string SVG markup (no XML prolog).
+     * @return string SVG markup (no XML prolog), or '' when the encoder failed.
      */
     public static function qr_svg(moodle_url $url): string {
-        $qrcode = new \core_qrcode($url->out(false));
-        $svg = $qrcode->getBarcodeSVGcode(6, 6, 'black');
+        set_error_handler(static function (int $errno, string $errstr): bool {
+            throw new \ErrorException($errstr, 0, $errno);
+        });
+        try {
+            $qrcode = new \core_qrcode($url->out(false));
+            $svg = (string)$qrcode->getBarcodeSVGcode(6, 6, 'black');
+        } catch (\Throwable $e) {
+            $svg = '';
+        } finally {
+            restore_error_handler();
+        }
+        if (strpos($svg, '<svg') === false) {
+            return '';
+        }
         // Drop the XML prolog and DOCTYPE so the SVG can be inlined in HTML.
         return trim(preg_replace('/^.*?(<svg)/s', '$1', $svg));
     }

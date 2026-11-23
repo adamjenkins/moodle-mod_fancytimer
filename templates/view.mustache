@@ -144,7 +144,9 @@
         <div class="mod-fancytimer-panel" id="{{rootid}}-remote" data-region="remotepanel" hidden>
             <h4 class="h5">{{#str}} remote, mod_fancytimer {{/str}}</h4>
             <div class="mod-fancytimer-panelbody">
+                {{#qrsvg}}
                 <div class="mod-fancytimer-qr" role="img" aria-label="{{#str}} remoteqralt, mod_fancytimer {{/str}}">{{{qrsvg}}}</div>
+                {{/qrsvg}}
                 <div>
                     <p>{{#str}} remoteinstructions, mod_fancytimer {{/str}}</p>
                     <p class="mb-0"><a href="{{remoteurl}}" target="_blank" rel="noopener">{{remoteurl}}</a></p>

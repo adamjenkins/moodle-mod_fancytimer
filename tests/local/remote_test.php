@@ -194,4 +194,22 @@ final class remote_test extends \advanced_testcase {
         $this->assertStringNotContainsString('<?xml', $svg);
         $this->assertStringNotContainsString('DOCTYPE', $svg);
     }
+
+    /**
+     * The QR code of the URL that failed on CI's PHP 8.4.28 job, and the caller's error handler survives.
+     */
+    public function test_qr_restores_error_handler(): void {
+        $marker = static fn(): bool => true;
+        set_error_handler($marker);
+        try {
+            $url = new \moodle_url('http://localhost:8000/mod/fancytimer/remote.php', ['id' => 109000]);
+            $svg = remote::qr_svg($url);
+            // Either a whole SVG or nothing: never a half-built code.
+            $this->assertTrue($svg === '' || str_starts_with($svg, '<svg'));
+            $this->assertSame($marker, set_error_handler(null));
+        } finally {
+            restore_error_handler();
+            restore_error_handler();
+        }
+    }
 }
