@@ -1,0 +1,531 @@
+/* Display (view.php): stage, countdown, ring, bar, controls, running order. */
+.mod-fancytimer-view .mod-fancytimer-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 70vh;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background-color: #cfe2ff;
+    color: #212529;
+    transition: background-color 300ms ease, color 300ms ease;
+}
+
+.mod-fancytimer-view .mod-fancytimer-topline {
+    text-align: center;
+}
+
+.mod-fancytimer-view .mod-fancytimer-label {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: inherit;
+}
+
+.mod-fancytimer-view .mod-fancytimer-position {
+    margin: 0.25rem 0 0;
+    font-size: 1.25rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-countdown {
+    font-size: 22vw;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.mod-fancytimer-view .mod-fancytimer-countdown.mod-fancytimer-long {
+    font-size: 15vw;
+}
+
+.mod-fancytimer-view .mod-fancytimer-imagewrap {
+    flex: 0 1 25%;
+    text-align: center;
+}
+
+.mod-fancytimer-view .mod-fancytimer-image {
+    max-width: 100%;
+    max-height: 40vh;
+    object-fit: contain;
+    border-radius: 0.5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-ring {
+    flex: 0 0 auto;
+    width: 12vw;
+    height: 12vw;
+    min-width: 5rem;
+    min-height: 5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-ringsvg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.mod-fancytimer-view .mod-fancytimer-ringtrack {
+    fill: none;
+    stroke: currentColor;
+    stroke-opacity: 0.2;
+    stroke-width: 10;
+}
+
+.mod-fancytimer-view .mod-fancytimer-ringfill {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.mod-fancytimer-view .mod-fancytimer-status {
+    min-height: 1.5em;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.mod-fancytimer-view .mod-fancytimer-cycle {
+    width: 100%;
+}
+
+.mod-fancytimer-view .mod-fancytimer-bar {
+    width: 100%;
+    height: 0.75rem;
+    overflow: hidden;
+    border: 1px solid currentColor;
+    border-radius: 0.375rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-barfill {
+    width: 0;
+    height: 100%;
+    background-color: currentColor;
+}
+
+.mod-fancytimer-view .mod-fancytimer-cyclelength {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    text-align: right;
+}
+
+.mod-fancytimer-view .mod-fancytimer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+.mod-fancytimer-view .mod-fancytimer-controls .btn:focus-visible,
+.mod-fancytimer-view .mod-fancytimer-panel a:focus-visible,
+.mod-fancytimer-view .mod-fancytimer-order a:focus-visible {
+    outline: 3px solid var(--bs-focus-ring-color, #0d6efd);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 0.25rem var(--bs-body-bg);
+}
+
+.mod-fancytimer-view .mod-fancytimer-panel {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+.mod-fancytimer-view .mod-fancytimer-panelbody {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-qr {
+    flex: 0 0 auto;
+    padding: 0.5rem;
+    background-color: #fff;
+}
+
+.mod-fancytimer-view .mod-fancytimer-qr svg {
+    display: block;
+    max-width: 100%;
+}
+
+.mod-fancytimer-view .mod-fancytimer-panelbody a {
+    word-break: break-all;
+}
+
+.mod-fancytimer-view .mod-fancytimer-shortcuts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-shortcuts dd {
+    margin: 0;
+}
+
+.mod-fancytimer-view .mod-fancytimer-soundprompt {
+    margin: 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Changeover flash: a bright wash that fades out (once; no repeated flashing). */
+@keyframes mod-fancytimer-flash {
+    0% {
+        box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, 0.75);
+    }
+    100% {
+        box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, 0);
+    }
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-flash {
+    animation: mod-fancytimer-flash 1000ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mod-fancytimer-view .mod-fancytimer-stage {
+        transition: none;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-flash {
+        animation: none;
+        outline: 0.75rem solid currentColor;
+        outline-offset: -0.75rem;
+    }
+}
+
+/* Full screen on the stage. */
+.mod-fancytimer-view .mod-fancytimer-stage:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    overflow: auto;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-isfullscreen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    overflow: auto;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage:fullscreen .mod-fancytimer-countdown {
+    font-size: 28vw;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-isfullscreen .mod-fancytimer-countdown {
+    font-size: 28vw;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage:fullscreen .mod-fancytimer-countdown.mod-fancytimer-long {
+    font-size: 19vw;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-isfullscreen .mod-fancytimer-countdown.mod-fancytimer-long {
+    font-size: 19vw;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage:fullscreen .mod-fancytimer-label {
+    font-size: 4.5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-stage.mod-fancytimer-isfullscreen .mod-fancytimer-label {
+    font-size: 4.5rem;
+}
+
+/* Running order strip. */
+.mod-fancytimer-view .mod-fancytimer-order {
+    margin-top: 1.5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-orderlist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+}
+
+.mod-fancytimer-view .mod-fancytimer-orderitem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-orderitem.mod-fancytimer-current {
+    border-color: var(--bs-emphasis-color);
+    border-width: 3px;
+    font-weight: 700;
+}
+
+.mod-fancytimer-view .mod-fancytimer-orderswatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 50%;
+    font-weight: 700;
+}
+
+.mod-fancytimer-view .mod-fancytimer-ordertext {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mod-fancytimer-view .mod-fancytimer-orderduration {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Phone width: image above the countdown, everything stacked. */
+@media (max-width: 575.98px) {
+    .mod-fancytimer-view .mod-fancytimer-stage {
+        min-height: 60vh;
+        padding: 1rem;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-main {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-imagewrap {
+        flex-basis: auto;
+        order: -1;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-image {
+        max-height: 25vh;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-countdown {
+        font-size: 26vw;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-countdown.mod-fancytimer-long {
+        font-size: 18vw;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-ring {
+        width: 5rem;
+        height: 5rem;
+    }
+
+    .mod-fancytimer-view .mod-fancytimer-label {
+        font-size: 1.75rem;
+    }
+}
+/* Segment editor: colour swatches, contrast readout and preview chip. */
+.mod-fancytimer-swatches .mod-fancytimer-swatch {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.mod-fancytimer-swatches .mod-fancytimer-swatch[aria-pressed="true"] {
+    outline: 3px solid var(--bs-body-color);
+    outline-offset: 2px;
+}
+
+.mod-fancytimer-swatches .mod-fancytimer-swatch:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.mod-fancytimer-colourpicker.form-control-color {
+    width: 3rem;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.25rem;
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-chip {
+    display: inline-block;
+    min-width: 4.5rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-readout {
+    padding: 0.25rem 0.5rem;
+    border-left: 4px solid transparent;
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-good {
+    border-left-color: var(--bs-success);
+    color: var(--bs-success-text-emphasis);
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-low {
+    border-left-color: var(--bs-warning);
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-verylow {
+    border-left-color: var(--bs-danger);
+    background-color: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger-text-emphasis);
+    font-weight: 700;
+}
+
+.mod-fancytimer-contrast .mod-fancytimer-contrast-invalid {
+    border-left-color: var(--bs-secondary);
+    color: var(--bs-secondary-color);
+}
+
+/* Teacher recordings library. */
+.mod-fancytimer-recorder .mod-fancytimer-recorder-dot {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--bs-danger);
+    vertical-align: middle;
+}
+
+.mod-fancytimer-recorder .btn-primary .mod-fancytimer-recorder-dot {
+    background-color: currentColor;
+}
+
+.mod-fancytimer-recorder .mod-fancytimer-recorder-live {
+    animation: mod-fancytimer-recorder-blink 1000ms ease-in-out infinite;
+}
+
+.mod-fancytimer-recorder .mod-fancytimer-recorder-elapsed {
+    font-variant-numeric: tabular-nums;
+}
+
+.mod-fancytimer-recorder .mod-fancytimer-recorder-preview {
+    max-width: 100%;
+}
+
+.mod-fancytimer-recorder .mod-fancytimer-recorder-name {
+    max-width: 32rem;
+}
+
+@keyframes mod-fancytimer-recorder-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mod-fancytimer-recorder .mod-fancytimer-recorder-live {
+        animation: none;
+    }
+}
+.mod-fancytimer-remote {
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-label {
+    font-size: 1.25rem;
+    min-height: 1.5em;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-countdown {
+    font-size: 18vw;
+    line-height: 1.1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-meta {
+    font-size: 1.1rem;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-btn {
+    min-height: 4.5rem;
+    font-size: 1.35rem;
+    font-weight: 600;
+    transition: transform 150ms ease-out;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-btn:focus-visible {
+    outline: 3px solid var(--bs-focus-ring-color, #0d6efd);
+    outline-offset: 2px;
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-btn.mod-fancytimer-remote-sent {
+    transform: scale(0.95);
+    box-shadow: inset 0 0 0 0.25rem rgba(0, 0, 0, 0.25);
+}
+
+.mod-fancytimer-remote .mod-fancytimer-remote-btn[aria-disabled="true"] {
+    opacity: 0.65;
+    cursor: progress;
+}
+
+@media (min-width: 576px) {
+    .mod-fancytimer-remote .mod-fancytimer-remote-countdown {
+        font-size: 6rem;
+    }
+
+    .mod-fancytimer-remote .mod-fancytimer-remote-buttons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mod-fancytimer-remote .mod-fancytimer-remote-btn {
+        transition: none;
+    }
+
+    .mod-fancytimer-remote .mod-fancytimer-remote-btn.mod-fancytimer-remote-sent {
+        transform: none;
+    }
+}
+.mod-fancytimer-presets .mod-fancytimer-presets-summary {
+    padding-left: 1.25rem;
+}
+
+.mod-fancytimer-presets .mod-fancytimer-presets-item .btn:focus-visible {
+    outline: 2px solid var(--bs-focus-ring-color, #0f6cbf);
+    outline-offset: 2px;
+}

@@ -1,0 +1,205 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_fancytimer/view
+
+    The timer display. Users who may control the timer get the controls; everyone else
+    gets a mirror of the teacher's timer. amd/src/timer.js drives it from data-config.
+
+    Classes required for JS:
+    * none (elements are found by data-region and data-action)
+
+    Context variables required for this template:
+    * rootid - id of the root element
+    * configjson - display config JSON (display_config::build())
+    * name - timer name, plain text
+    * cancontrol - whether the viewer runs the timer
+    * ismirror - the opposite of cancontrol
+    * hassegments - whether the timer has any segments
+    * segmentcount - number of segments
+    * segmentsorder - running order: position, label, duration, isrotation, bgcolour, textcolour, iscurrent
+    * firstlabel, firstbgcolour, firsttextcolour, firstduration, firstimageurl, firstposition - first render
+    * cyclelength - formatted length of one cycle
+    * mirrornotice, mirrorwaiting - mirror mode texts
+    * canedit, editurl - link to the segments page
+    * remoteurl, qrsvg - phone remote link and QR code (SVG markup)
+
+    Example context (json):
+    {
+        "rootid": "mod-fancytimer-12",
+        "configjson": "{\"cmid\":12,\"mode\":\"control\",\"segments\":[]}",
+        "name": "Speaking practice",
+        "cancontrol": true,
+        "ismirror": false,
+        "hassegments": true,
+        "segmentcount": 2,
+        "segmentsorder": [
+            {"position": 1, "label": "Person 1 is speaking", "duration": "2:00", "isrotation": false,
+             "bgcolour": "#cfe2ff", "textcolour": "#212529", "iscurrent": true},
+            {"position": 2, "label": "Change groups!", "duration": "0:30", "isrotation": true,
+             "bgcolour": "#fff3cd", "textcolour": "#212529", "iscurrent": false}
+        ],
+        "firstlabel": "Person 1 is speaking",
+        "firstbgcolour": "#cfe2ff",
+        "firsttextcolour": "#212529",
+        "firstduration": "2:00",
+        "firstimageurl": "",
+        "firstposition": "Segment 1 of 2",
+        "cyclelength": "2:30",
+        "mirrornotice": "This screen shows the teacher's timer.",
+        "mirrorwaiting": "Waiting for the teacher to start the timer.",
+        "canedit": true,
+        "editurl": "https://example.com/mod/fancytimer/edit.php?id=12",
+        "remoteurl": "https://example.com/mod/fancytimer/remote.php?id=12",
+        "qrsvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"></svg>"
+    }
+}}
+<div class="mod-fancytimer-view">
+{{^hassegments}}
+    <div class="alert alert-info mod-fancytimer-empty" role="status">
+        <p class="mb-0">{{#str}} nosegments, mod_fancytimer {{/str}}</p>
+        {{#canedit}}
+            <p class="mt-2 mb-0"><a class="btn btn-primary" href="{{editurl}}">{{#str}} addsegments, mod_fancytimer {{/str}}</a></p>
+        {{/canedit}}
+    </div>
+{{/hassegments}}
+{{#hassegments}}
+<div id="{{rootid}}" class="mod-fancytimer-root" data-config="{{configjson}}" data-mode="{{#cancontrol}}control{{/cancontrol}}{{#ismirror}}mirror{{/ismirror}}">
+    {{#ismirror}}
+        <p class="alert alert-secondary mod-fancytimer-mirrornotice">{{mirrornotice}}</p>
+    {{/ismirror}}
+
+    <section class="mod-fancytimer-stage" data-region="stage" aria-label="{{name}}"
+        style="background-color: {{firstbgcolour}}; color: {{firsttextcolour}};">
+
+        <div class="mod-fancytimer-topline">
+            <h3 class="mod-fancytimer-label" data-region="label">{{firstlabel}}</h3>
+            <p class="mod-fancytimer-position" data-region="position">{{firstposition}}</p>
+        </div>
+
+        <div class="mod-fancytimer-main">
+            <div class="mod-fancytimer-imagewrap{{^firstimageurl}} d-none{{/firstimageurl}}" data-region="imagewrap">
+                {{#firstimageurl}}<img class="mod-fancytimer-image" data-region="image" src="{{firstimageurl}}" alt="">{{/firstimageurl}}
+            </div>
+
+            <div class="mod-fancytimer-countdown" data-region="countdown" role="timer" aria-atomic="true">{{firstduration}}</div>
+
+            <div class="mod-fancytimer-ring" data-region="ring" role="progressbar"
+                aria-label="{{#str}} progresssegment, mod_fancytimer {{/str}}"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <svg class="mod-fancytimer-ringsvg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                    <circle class="mod-fancytimer-ringtrack" cx="50" cy="50" r="44"></circle>
+                    <circle class="mod-fancytimer-ringfill" data-region="ringfill" cx="50" cy="50" r="44"
+                        stroke-dasharray="276.46" stroke-dashoffset="276.46" transform="rotate(-90 50 50)"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <p class="mod-fancytimer-status" data-region="status">{{#ismirror}}{{mirrorwaiting}}{{/ismirror}}</p>
+
+        <div class="mod-fancytimer-cycle">
+            <div class="mod-fancytimer-bar" data-region="cyclebar" role="progressbar"
+                aria-label="{{#str}} progresscycle, mod_fancytimer {{/str}}"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="mod-fancytimer-barfill" data-region="cyclebarfill"></div>
+            </div>
+            <p class="mod-fancytimer-cyclelength">{{#str}} cyclelength, mod_fancytimer, {{cyclelength}} {{/str}}</p>
+        </div>
+
+        <div class="alert alert-warning mod-fancytimer-soundprompt d-none" data-region="soundprompt" role="status">
+            {{#str}} enablesound, mod_fancytimer {{/str}}
+        </div>
+
+        <div class="visually-hidden" data-region="announcer" aria-live="polite" aria-atomic="true"></div>
+
+        {{#cancontrol}}
+        <div class="mod-fancytimer-controls" role="group" aria-label="{{#str}} controls, mod_fancytimer {{/str}}">
+            <button type="button" class="btn btn-primary" data-action="start">{{#str}} control_start, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary d-none" data-action="toggle" aria-pressed="false">{{#str}} control_pause, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="previous">{{#str}} control_back, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="next">{{#str}} control_skip, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="reset">{{#str}} control_reset, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="addtime">{{#str}} control_addtime, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="fullscreen" aria-pressed="false">{{#str}} control_fullscreen, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-outline-secondary" data-action="remote"
+                aria-expanded="false" aria-controls="{{rootid}}-remote">{{#str}} remote, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-outline-secondary" data-action="help"
+                aria-expanded="false" aria-controls="{{rootid}}-help">{{#str}} control_shortcuts, mod_fancytimer {{/str}}</button>
+        </div>
+
+        <div class="mod-fancytimer-panel" id="{{rootid}}-remote" data-region="remotepanel" hidden>
+            <h4 class="h5">{{#str}} remote, mod_fancytimer {{/str}}</h4>
+            <div class="mod-fancytimer-panelbody">
+                <div class="mod-fancytimer-qr" role="img" aria-label="{{#str}} remoteqralt, mod_fancytimer {{/str}}">{{{qrsvg}}}</div>
+                <div>
+                    <p>{{#str}} remoteinstructions, mod_fancytimer {{/str}}</p>
+                    <p class="mb-0"><a href="{{remoteurl}}" target="_blank" rel="noopener">{{remoteurl}}</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mod-fancytimer-panel" id="{{rootid}}-help" data-region="helppanel" hidden>
+            <h4 class="h5">{{#str}} control_shortcuts, mod_fancytimer {{/str}}</h4>
+            <dl class="mod-fancytimer-shortcuts mb-0">
+                <dt><kbd>{{#str}} key_space, mod_fancytimer {{/str}}</kbd></dt>
+                <dd>{{#str}} shortcut_toggle, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>{{#str}} key_right, mod_fancytimer {{/str}}</kbd></dt>
+                <dd>{{#str}} shortcut_next, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>{{#str}} key_left, mod_fancytimer {{/str}}</kbd></dt>
+                <dd>{{#str}} shortcut_previous, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>R</kbd></dt>
+                <dd>{{#str}} shortcut_reset, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>F</kbd></dt>
+                <dd>{{#str}} shortcut_fullscreen, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>+</kbd></dt>
+                <dd>{{#str}} shortcut_addtime, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>?</kbd></dt>
+                <dd>{{#str}} shortcut_help, mod_fancytimer {{/str}}</dd>
+            </dl>
+        </div>
+        {{/cancontrol}}
+    </section>
+
+    <section class="mod-fancytimer-order" aria-labelledby="{{rootid}}-orderheading">
+        <h3 class="h5" id="{{rootid}}-orderheading">{{#str}} runningorder, mod_fancytimer {{/str}}</h3>
+        <ol class="mod-fancytimer-orderlist list-unstyled" data-region="order">
+            {{#segmentsorder}}
+            <li class="mod-fancytimer-orderitem{{#iscurrent}} mod-fancytimer-current{{/iscurrent}}" data-position="{{position}}"
+                {{#iscurrent}}aria-current="step"{{/iscurrent}}>
+                <span class="mod-fancytimer-orderswatch" style="background-color: {{bgcolour}}; color: {{textcolour}};"
+                    aria-hidden="true">{{position}}</span>
+                <span class="mod-fancytimer-ordertext">
+                    <span class="visually-hidden">{{#str}} segmentnumber, mod_fancytimer, {{position}} {{/str}}</span>
+                    <span class="mod-fancytimer-orderlabel">{{label}}</span>
+                    <span class="mod-fancytimer-orderduration">{{duration}}</span>
+                    {{#isrotation}}<span class="badge bg-secondary">{{#str}} rotation, mod_fancytimer {{/str}}</span>{{/isrotation}}
+                </span>
+            </li>
+            {{/segmentsorder}}
+        </ol>
+        {{#canedit}}
+            <p><a href="{{editurl}}">{{#str}} editsegments, mod_fancytimer {{/str}}</a></p>
+        {{/canedit}}
+    </section>
+</div>
+{{#js}}
+require(['mod_fancytimer/timer'], function(timer) {
+    timer.init('{{rootid}}');
+});
+{{/js}}
+{{/hassegments}}
+</div>

@@ -1,0 +1,116 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_fancytimer/recorder
+
+    The teacher recordings library on the segment editor: record a changeover
+    message in the browser, then save it; play or delete saved recordings.
+    Driven by mod_fancytimer/recorder.
+
+    Context variables required for this template:
+    * rootid - id of the root element
+    * cmid - course module id
+    * recordings - list of {id, name, url, hasurl}
+    * hasrecordings - whether the list is non-empty
+    * recordingurls - JSON object {"<id>": "<url>"} read by mod_fancytimer/sound_preview
+    * maxseconds - recordings stop after this many seconds
+    * maxrecordings - most recordings an activity may have
+    * defaultname - suggested name for a new recording
+    * canaddmore - false when the activity has the most recordings allowed
+
+    Example context (json):
+    {
+        "rootid": "mod-fancytimer-recorder-abc",
+        "cmid": 12,
+        "recordings": [
+            {"id": 3, "name": "Change to the next person", "url": "https://example.com/r.webm", "hasurl": true}
+        ],
+        "hasrecordings": true,
+        "recordingurls": "{\"3\": \"https://example.com/r.webm\"}",
+        "maxseconds": 60,
+        "maxrecordings": 30,
+        "defaultname": "Change to the next person",
+        "canaddmore": true
+    }
+}}
+<section id="{{rootid}}" class="mod-fancytimer-recorder mt-5" aria-labelledby="{{rootid}}-heading"
+        data-region="mod-fancytimer-recorder" data-cmid="{{cmid}}" data-maxseconds="{{maxseconds}}"
+        data-maxrecordings="{{maxrecordings}}"
+        data-canaddmore="{{#canaddmore}}1{{/canaddmore}}{{^canaddmore}}0{{/canaddmore}}"
+        data-fancytimer-recordingurls="{{recordingurls}}">
+    <h3 id="{{rootid}}-heading">{{#str}}recordings, mod_fancytimer{{/str}}</h3>
+    <p>{{#str}}recordingsintro, mod_fancytimer{{/str}}</p>
+
+    <div class="alert alert-warning d-none" data-region="unsupported">
+        {{#pix}}i/warning, core{{/pix}}{{#str}}recordingunsupported, mod_fancytimer{{/str}}
+    </div>
+    <div class="alert alert-info{{#canaddmore}} d-none{{/canaddmore}}" data-region="full">
+        {{#str}}recordinglimitreached, mod_fancytimer{{/str}}
+    </div>
+
+    <div class="mod-fancytimer-recorder-panel p-3 mb-3 border rounded" data-region="panel">
+        <div data-region="idle">
+            <button type="button" class="btn btn-primary" data-action="record">
+                <span class="mod-fancytimer-recorder-dot me-2" aria-hidden="true"></span>{{#str}}record, mod_fancytimer{{/str}}
+            </button>
+            <p class="form-text mt-2 mb-0">{{#str}}recordingmax, mod_fancytimer, {{maxseconds}}{{/str}}</p>
+        </div>
+
+        <div class="d-none" data-region="recording">
+            <span class="mod-fancytimer-recorder-dot mod-fancytimer-recorder-live me-2" aria-hidden="true"></span>
+            <span class="fw-bold me-3">{{#str}}recordingnow, mod_fancytimer{{/str}}
+                <span class="mod-fancytimer-recorder-elapsed" data-region="elapsed">0:00</span>
+            </span>
+            <button type="button" class="btn btn-danger" data-action="stop">{{#str}}stoprecording, mod_fancytimer{{/str}}</button>
+        </div>
+
+        <div class="d-none" data-region="recorded">
+            <audio controls class="d-block mb-3 mod-fancytimer-recorder-preview" data-region="preview"
+                aria-label="{{#str}}recordingpreview, mod_fancytimer{{/str}}"></audio>
+            <div class="mb-3">
+                <label class="form-label" for="{{rootid}}-name">{{#str}}recordingname, mod_fancytimer{{/str}}</label>
+                <input type="text" class="form-control mod-fancytimer-recorder-name" id="{{rootid}}-name" maxlength="255"
+                    data-region="name" value="{{defaultname}}" autocomplete="off">
+            </div>
+            <button type="button" class="btn btn-primary me-2" data-action="save">
+                {{#str}}saverecording, mod_fancytimer{{/str}}
+            </button>
+            <button type="button" class="btn btn-secondary" data-action="discard">
+                {{#str}}discardrecording, mod_fancytimer{{/str}}
+            </button>
+        </div>
+
+        <p class="mt-2 mb-0" role="status" aria-live="polite" data-region="status"></p>
+    </div>
+
+    <h4>{{#str}}savedrecordings, mod_fancytimer{{/str}}</h4>
+    <p class="{{#hasrecordings}}d-none{{/hasrecordings}}" data-region="empty">{{#str}}norecordings, mod_fancytimer{{/str}}</p>
+    <ul class="list-unstyled mod-fancytimer-recorder-list" data-region="list">
+        {{#recordings}}
+        <li class="d-flex flex-wrap align-items-center py-2 border-bottom" data-region="item" data-recordingid="{{id}}"
+                data-url="{{url}}">
+            <span class="me-auto" data-region="itemname">{{name}}</span>
+            <button type="button" class="btn btn-secondary btn-sm ms-2" data-action="play"{{^hasurl}} disabled{{/hasurl}}>
+                {{#str}}playrecording, mod_fancytimer{{/str}}<span class="visually-hidden"> {{name}}</span>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm ms-2" data-action="delete">
+                {{#str}}deleterecording, mod_fancytimer{{/str}}<span class="visually-hidden"> {{name}}</span>
+            </button>
+        </li>
+        {{/recordings}}
+    </ul>
+</section>

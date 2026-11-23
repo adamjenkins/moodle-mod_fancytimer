@@ -1,0 +1,155 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_fancytimer/presets
+
+    The presets page: bundled templates, the user's presets, save, export and import.
+
+    name values are format_string() output (already HTML-safe); plainname values are plain text.
+    saveform and importform are rendered moodleforms.
+
+    Example context (json):
+    {
+        "cmid": 12,
+        "actionurl": "https://example.com/mod/fancytimer/presets.php",
+        "sesskey": "abc123",
+        "templates": [
+            {
+                "key": "threeperson",
+                "name": "Three-person talk",
+                "plainname": "Three-person talk",
+                "segments": [
+                    {"label": "Person 1 is speaking", "duration": "2:00"},
+                    {"label": "Rotation break: Change groups!", "duration": "0:30"}
+                ],
+                "cycle": "6:30"
+            }
+        ],
+        "haspresets": true,
+        "presets": [
+            {"presetid": 3, "name": "My talk", "plainname": "My talk", "timemodified": "23/11/26, 10:00"}
+        ],
+        "saveform": "<form></form>",
+        "importform": "<form></form>"
+    }
+}}
+<div class="mod-fancytimer-presets">
+    <p>{{#str}} presetsintro, mod_fancytimer {{/str}}</p>
+
+    <section class="mod-fancytimer-presets-section mb-4" aria-labelledby="mod-fancytimer-presets-templates-{{cmid}}">
+        <h3 id="mod-fancytimer-presets-templates-{{cmid}}">{{#str}} bundledtemplates, mod_fancytimer {{/str}}</h3>
+        <ul class="list-unstyled mod-fancytimer-presets-list">
+            {{#templates}}
+            <li class="mod-fancytimer-presets-item card mb-3">
+                <div class="card-body">
+                    <h4 class="h5 card-title">{{{name}}}</h4>
+                    <ol class="mod-fancytimer-presets-summary mb-2">
+                        {{#segments}}
+                        <li>{{label}} <span class="text-body-secondary">({{duration}})</span></li>
+                        {{/segments}}
+                    </ol>
+                    <p class="mb-2">{{#str}} presetcycle, mod_fancytimer, {{cycle}} {{/str}}</p>
+                    <form method="post" action="{{actionurl}}" class="d-inline-block">
+                        <input type="hidden" name="id" value="{{cmid}}">
+                        <input type="hidden" name="action" value="applytemplate">
+                        <input type="hidden" name="key" value="{{key}}">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <button type="submit" class="btn btn-primary"
+                            aria-label="{{#str}} applytotimernamed, mod_fancytimer, {{plainname}} {{/str}}">
+                            {{#str}} applytotimer, mod_fancytimer {{/str}}
+                        </button>
+                    </form>
+                </div>
+            </li>
+            {{/templates}}
+        </ul>
+    </section>
+
+    <section class="mod-fancytimer-presets-section mb-4" aria-labelledby="mod-fancytimer-presets-mine-{{cmid}}">
+        <h3 id="mod-fancytimer-presets-mine-{{cmid}}">{{#str}} mypresets, mod_fancytimer {{/str}}</h3>
+        {{#haspresets}}
+        <ul class="list-unstyled mod-fancytimer-presets-list">
+            {{#presets}}
+            <li class="mod-fancytimer-presets-item card mb-3">
+                <div class="card-body">
+                    <h4 class="h5 card-title">{{{name}}}</h4>
+                    <p class="text-body-secondary mb-2">{{#str}} presetmodified, mod_fancytimer, {{timemodified}} {{/str}}</p>
+                    <div class="mod-fancytimer-presets-actions d-flex flex-wrap">
+                        <form method="post" action="{{actionurl}}" class="me-2 mb-2">
+                            <input type="hidden" name="id" value="{{cmid}}">
+                            <input type="hidden" name="action" value="applypreset">
+                            <input type="hidden" name="presetid" value="{{presetid}}">
+                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                            <button type="submit" class="btn btn-primary"
+                                aria-label="{{#str}} applytotimernamed, mod_fancytimer, {{plainname}} {{/str}}">
+                                {{#str}} applytotimer, mod_fancytimer {{/str}}
+                            </button>
+                        </form>
+                        <form method="post" action="{{actionurl}}" class="me-2 mb-2">
+                            <input type="hidden" name="id" value="{{cmid}}">
+                            <input type="hidden" name="action" value="exportpreset">
+                            <input type="hidden" name="presetid" value="{{presetid}}">
+                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                            <button type="submit" class="btn btn-secondary"
+                                aria-label="{{#str}} exportpresetnamed, mod_fancytimer, {{plainname}} {{/str}}">
+                                {{#str}} exportpreset, mod_fancytimer {{/str}}
+                            </button>
+                        </form>
+                        <form method="post" action="{{actionurl}}" class="me-2 mb-2">
+                            <input type="hidden" name="id" value="{{cmid}}">
+                            <input type="hidden" name="action" value="deletepreset">
+                            <input type="hidden" name="presetid" value="{{presetid}}">
+                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                            <button type="submit" class="btn btn-outline-danger"
+                                aria-label="{{#str}} deletepresetnamed, mod_fancytimer, {{plainname}} {{/str}}">
+                                {{#str}} delete {{/str}}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+            {{/presets}}
+        </ul>
+        {{/haspresets}}
+        {{^haspresets}}
+        <p>{{#str}} nopresets, mod_fancytimer {{/str}}</p>
+        {{/haspresets}}
+    </section>
+
+    <section class="mod-fancytimer-presets-section mb-4" aria-labelledby="mod-fancytimer-presets-save-{{cmid}}">
+        <h3 id="mod-fancytimer-presets-save-{{cmid}}">{{#str}} savepresetheading, mod_fancytimer {{/str}}</h3>
+        <p>{{#str}} savepresetdesc, mod_fancytimer {{/str}}</p>
+        {{{saveform}}}
+    </section>
+
+    <section class="mod-fancytimer-presets-section mb-4" aria-labelledby="mod-fancytimer-presets-export-{{cmid}}">
+        <h3 id="mod-fancytimer-presets-export-{{cmid}}">{{#str}} exporttimer, mod_fancytimer {{/str}}</h3>
+        <p>{{#str}} exporttimerdesc, mod_fancytimer {{/str}}</p>
+        <form method="post" action="{{actionurl}}">
+            <input type="hidden" name="id" value="{{cmid}}">
+            <input type="hidden" name="action" value="exporttimer">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <button type="submit" class="btn btn-secondary">{{#str}} downloadpresetfile, mod_fancytimer {{/str}}</button>
+        </form>
+    </section>
+
+    <section class="mod-fancytimer-presets-section mb-4" aria-labelledby="mod-fancytimer-presets-import-{{cmid}}">
+        <h3 id="mod-fancytimer-presets-import-{{cmid}}">{{#str}} importpreset, mod_fancytimer {{/str}}</h3>
+        <p>{{#str}} importpresetdesc, mod_fancytimer {{/str}}</p>
+        {{{importform}}}
+    </section>
+</div>

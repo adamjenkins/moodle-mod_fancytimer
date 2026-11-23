@@ -1,0 +1,86 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_fancytimer/remote
+
+    Phone remote for a Fancy Timer. amd/src/remote.js fills in the status and sends the commands.
+
+    Context variables required for this template:
+    * rootid - id of the root element
+    * name - timer name, already formatted with format_string()
+    * config - JSON for remote.js: cmid, pollms, segments [{label, duration}]
+    * viewurl - URL of the timer display
+
+    Example context (json):
+    {
+        "rootid": "mod-fancytimer-remote-abc123",
+        "name": "Three-person talk",
+        "config": "{\"cmid\":5,\"pollms\":1500,\"segments\":[{\"label\":\"Person 1 is speaking\",\"duration\":120}]}",
+        "viewurl": "https://example.com/mod/fancytimer/view.php?id=5"
+    }
+}}
+<div id="{{rootid}}" class="mod-fancytimer-remote" data-config="{{config}}" data-status="idle">
+    <h2 class="mod-fancytimer-remote-title h4 mb-3">{{{name}}}</h2>
+
+    <section class="mod-fancytimer-remote-panel card mb-3" aria-labelledby="{{rootid}}-statushead">
+        <div class="card-body text-center">
+            <h3 id="{{rootid}}-statushead" class="visually-hidden">{{#str}} remote_status, mod_fancytimer {{/str}}</h3>
+            <p class="mod-fancytimer-remote-connection mb-2" data-region="connection">
+                <span class="badge text-bg-secondary" data-region="connection-text">{{#str}} remote_connecting, mod_fancytimer {{/str}}</span>
+            </p>
+            <p class="mod-fancytimer-remote-label fw-bold mb-1" data-region="label"></p>
+            <p class="mod-fancytimer-remote-countdown mb-1" data-region="countdown" role="timer"
+                aria-label="{{#str}} remote_timeleft, mod_fancytimer {{/str}}">-:--</p>
+            <p class="mod-fancytimer-remote-meta mb-0">
+                <span data-region="statustext">{{#str}} remote_waiting, mod_fancytimer {{/str}}</span>
+                <span class="mx-1" aria-hidden="true">&middot;</span>
+                <span data-region="position"></span>
+            </p>
+            <div class="visually-hidden" data-region="announce" aria-live="polite" aria-atomic="true"></div>
+        </div>
+    </section>
+
+    <div class="alert alert-warning d-none" data-region="notconnected" role="status">
+        {{#str}} remote_notconnected, mod_fancytimer {{/str}}
+    </div>
+    <div class="alert alert-danger d-none" data-region="error" role="alert"></div>
+
+    <div class="mod-fancytimer-remote-buttons mb-3" role="group" aria-label="{{#str}} remote_controls, mod_fancytimer {{/str}}">
+        <button type="button" class="btn btn-success mod-fancytimer-remote-btn" data-command="start">
+            {{#str}} remote_start, mod_fancytimer {{/str}}
+        </button>
+        <button type="button" class="btn btn-primary mod-fancytimer-remote-btn" data-command="toggle" data-region="toggle">
+            {{#str}} remote_pause, mod_fancytimer {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mod-fancytimer-remote-btn" data-command="previous">
+            {{#str}} remote_back, mod_fancytimer {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mod-fancytimer-remote-btn" data-command="next">
+            {{#str}} remote_skip, mod_fancytimer {{/str}}
+        </button>
+        <button type="button" class="btn btn-outline-danger mod-fancytimer-remote-btn" data-command="reset">
+            {{#str}} remote_reset, mod_fancytimer {{/str}}
+        </button>
+        <button type="button" class="btn btn-outline-primary mod-fancytimer-remote-btn" data-command="addtime" data-value="30"
+            aria-label="{{#str}} remote_addtime_label, mod_fancytimer {{/str}}">
+            {{#str}} remote_addtime, mod_fancytimer {{/str}}
+        </button>
+    </div>
+
+    <p class="mod-fancytimer-remote-explain text-body-secondary">{{#str}} remote_explain, mod_fancytimer {{/str}}</p>
+    <p><a href="{{viewurl}}">{{#str}} remote_openview, mod_fancytimer {{/str}}</a></p>
+</div>
