@@ -29,7 +29,7 @@ use stdClass;
  *       "version": 1,
  *       "name": "Three-person talk",
  *       "settings": {"looping": 1, "rotationenabled": 1, "warningenabled": 0,
- *                    "warningsecs": 5, "warningsound": "tick", "startsound": "none"},
+ *                    "warningsecs": 5, "warningsound": "tick", "startsound": "none", "showring": 0},
  *       "segments": [{"label": "Person 1 is speaking", "duration": 120,
  *                     "bgcolour": "#cfe2ff", "textcolour": "#212529", "sound": "chime"}],
  *       "rotation": {"label": "Change groups!", "duration": 30, ...} | null
@@ -99,6 +99,7 @@ class preset_format {
                 'warningsecs' => max(1, min(30, (int)($settings['warningsecs'] ?? 5))),
                 'warningsound' => sounds::clean_warning($settings['warningsound'] ?? null),
                 'startsound' => sounds::clean_start($settings['startsound'] ?? null, $fancytimerid),
+                'showring' => empty($settings['showring']) ? 0 : 1,
             ],
             'segments' => $segments,
             'rotation' => $rotation,
@@ -141,6 +142,7 @@ class preset_format {
                     $fancytimer->startsound ?? null,
                     $keeprecordings ? (int)$fancytimer->id : 0
                 ),
+                'showring' => empty($fancytimer->showring) ? 0 : 1,
             ],
             'segments' => array_map($strip, segments::get_segments((int)$fancytimer->id)),
             'rotation' => $rotation ? $strip($rotation) : null,

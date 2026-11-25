@@ -149,7 +149,7 @@ final class preset_format_test extends \advanced_testcase {
         unset($config['settings']);
         $out = preset_format::validate($config);
         $this->assertSame(['looping' => 0, 'rotationenabled' => 0, 'warningenabled' => 0, 'warningsecs' => 5,
-            'warningsound' => sounds::DEFAULT_WARNING, 'startsound' => 'none'], $out['settings']);
+            'warningsound' => sounds::DEFAULT_WARNING, 'startsound' => 'none', 'showring' => 0], $out['settings']);
     }
 
     /**
@@ -180,7 +180,8 @@ final class preset_format_test extends \advanced_testcase {
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course(['summary' => '']);
         $timer = $this->getDataGenerator()->create_module('fancytimer', ['course' => $course->id,
-            'name' => 'Speaking', 'warningenabled' => 1, 'warningsecs' => 7, 'warningsound' => 'pulse']);
+            'name' => 'Speaking', 'warningenabled' => 1, 'warningsecs' => 7, 'warningsound' => 'pulse',
+            'showring' => 1]);
         $rec = $this->getDataGenerator()->get_plugin_generator('mod_fancytimer')->create_recording($timer);
         $first = segments::get_segments((int)$timer->id)[0];
         $DB->set_field('fancytimer_segments', 'sound', 'rec:' . $rec->id, ['id' => $first->id]);
@@ -193,7 +194,7 @@ final class preset_format_test extends \advanced_testcase {
         $this->assertCount(3, $export['segments']);
         $this->assertNotNull($export['rotation']);
         $this->assertSame(['looping' => 0, 'rotationenabled' => 1, 'warningenabled' => 1, 'warningsecs' => 7,
-            'warningsound' => 'pulse', 'startsound' => 'none'], $export['settings']);
+            'warningsound' => 'pulse', 'startsound' => 'none', 'showring' => 1], $export['settings']);
 
         $kept = preset_format::from_instance($timer, true);
         $this->assertSame('rec:' . $rec->id, $kept['segments'][0]['sound']);

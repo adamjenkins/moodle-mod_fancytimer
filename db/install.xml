@@ -17,6 +17,7 @@
         <FIELD NAME="warningsecs" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="5" SEQUENCE="false" COMMENT="Lead time of the warning cue, in seconds."/>
         <FIELD NAME="warningsound" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false" COMMENT="Built-in sound key of the warning cue."/>
         <FIELD NAME="startsound" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false" COMMENT="Sound when the timer starts: a built-in key, rec:ID or none (also when empty)."/>
+        <FIELD NAME="showring" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 = show a progress ring for the current segment."/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

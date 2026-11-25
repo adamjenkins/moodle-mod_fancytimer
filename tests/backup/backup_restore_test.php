@@ -113,6 +113,7 @@ final class backup_restore_test extends \advanced_testcase {
             'warningenabled' => 1,
             'warningsecs' => 10,
             'warningsound' => 'pulse',
+            'showring' => 1,
         ]);
         $context = \context_module::instance($timer->cmid);
         $recording = recordings::save(
@@ -163,6 +164,7 @@ final class backup_restore_test extends \advanced_testcase {
         $this->assertEquals(1, $new->warningenabled);
         $this->assertEquals(10, $new->warningsecs);
         $this->assertSame('pulse', $new->warningsound);
+        $this->assertEquals(1, $new->showring);
 
         // Segments in order, with the rotation segment.
         $newsegments = segments::get_segments((int)$new->id);

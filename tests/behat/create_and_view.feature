@@ -46,3 +46,16 @@ Feature: Add a Fancy Timer and view it
     Then "Skip" "button" should not be visible
     And I click on "[data-region='countdown']" "css_element"
     And "Skip" "button" should be visible
+
+  Scenario: The segment progress ring shows only when it is switched on in the settings
+    Given the following "activities" exist:
+      | activity   | name              | course | idnumber |
+      | fancytimer | Speaking practice | C1     | timer1   |
+    And I am on the "Speaking practice" "fancytimer activity" page logged in as "teacher1"
+    And "[data-region='ring']" "css_element" should not exist
+    When I am on the "Speaking practice" "fancytimer activity editing" page
+    And I set the field "showring" to "1"
+    And I press "Save and display"
+    Then "[data-region='ring']" "css_element" should exist
+    And I am on the "Speaking practice" "fancytimer activity editing" page
+    And the field "showring" matches value "1"

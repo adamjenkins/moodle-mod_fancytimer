@@ -13,9 +13,9 @@ example three speakers with two minutes each, and an optional rotation break at 
   klaxon), made in the browser so nothing has to be downloaded. Teachers can also record their
   own messages in the browser or upload sound files. A starting sound can play when the timer
   begins. Every sound in the settings has a Play button. An
-  optional warning cue sounds a few seconds before each changeover; it is off by default.
+  optional warning sounds in the last seconds of each segment (ticking every second, or one chime); it is off by default.
 - **Display**: a huge countdown, full-screen mode for projectors, a progress bar for the
-  whole cycle that can be clicked to jump to any point, controls that can be hidden, and the running order of segments.
+  whole cycle that can be clicked to jump to any point, an optional progress ring for the current segment, controls that can be hidden, and the running order of segments.
 - **Controls**: start, pause/resume, back, skip, reset and +30 s, with keyboard shortcuts:
   Space start/pause, → skip, ← back, R reset, F full screen, H hide or show the controls, + add 30 s, ? help.
 - **Phone remote**: scan the QR code on the teacher's screen to control the timer from a phone.

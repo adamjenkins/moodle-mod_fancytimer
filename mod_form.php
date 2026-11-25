@@ -86,6 +86,15 @@ class mod_fancytimer_mod_form extends moodleform_mod {
 
         $mform->addElement(
             'advcheckbox',
+            'showring',
+            get_string('showring', 'mod_fancytimer'),
+            get_string('showring_desc', 'mod_fancytimer')
+        );
+        $mform->setDefault('showring', 0);
+        $mform->addHelpButton('showring', 'showring', 'mod_fancytimer');
+
+        $mform->addElement(
+            'advcheckbox',
             'warningenabled',
             get_string('warningenabled', 'mod_fancytimer'),
             get_string('warningenabled_desc', 'mod_fancytimer')

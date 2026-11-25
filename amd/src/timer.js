@@ -31,6 +31,9 @@ import Pending from 'core/pending';
 import {getStrings} from 'core/str';
 import * as Audio from 'mod_fancytimer/audio';
 
+/** @type {number} Ring circumference (r = 44 in a 100 x 100 viewBox). */
+const RING_LENGTH = 2 * Math.PI * 44;
+
 /** @type {number} Seconds added by the +30 s control and key. */
 const ADD_SECONDS = 30;
 
@@ -45,6 +48,9 @@ const ERROR_BACKOFF_MS = 10000;
 
 /** @type {number} A mirror whose state is older than this while running says the teacher's timer is silent, ms. */
 const MIRROR_STALE_MS = 20000;
+
+/** @type {string[]} Warning sounds short enough to repeat every second; the others play once. */
+const REPEATED_WARNINGS = ['tick', 'pulse'];
 
 /** @type {number} Length of the changeover flash, ms. */
 const FLASH_MS = 1000;
@@ -135,7 +141,7 @@ class TimerDisplay {
             endAt: 0,
             remainingMs: this.segmentMs(0),
             durationMs: this.segmentMs(0),
-            warned: false,
+            cuedSecond: 0,
         };
         this.soundNeeded = false;
         this.wakeLock = null;
@@ -187,6 +193,8 @@ class TimerDisplay {
             position: q('position'),
             imagewrap: q('imagewrap'),
             countdown: q('countdown'),
+            ring: q('ring'),
+            ringfill: q('ringfill'),
             status: q('status'),
             cyclebar: q('cyclebar'),
             cyclebarfill: q('cyclebarfill'),
@@ -344,6 +352,16 @@ class TimerDisplay {
     }
 
     /**
+     * How far through the current segment the timer is.
+     *
+     * @returns {number} 0..1
+     */
+    segmentFraction() {
+        const s = this.state;
+        return s.durationMs > 0 ? Math.min(1, Math.max(0, 1 - this.remaining() / s.durationMs)) : 0;
+    }
+
+    /**
      * How far through the cycle the timer is.
      *
      * @returns {number} 0..1
@@ -353,7 +371,7 @@ class TimerDisplay {
         if (s.status === 'finished') {
             return 1;
         }
-        const done = s.durationMs > 0 ? Math.min(1, Math.max(0, 1 - this.remaining() / s.durationMs)) : 0;
+        const done = this.segmentFraction();
         let before = 0;
         for (let i = 0; i < s.index && i < this.segments.length; i++) {
             before += this.segmentMs(i);
@@ -392,7 +410,8 @@ class TimerDisplay {
         } else {
             s.remainingMs = left;
         }
-        s.warned = !!this.config.warning && left <= this.config.warning.secs * 1000;
+        // The second landed in is part over: the next cue comes at the next whole second.
+        s.cuedSecond = Math.ceil(left / 1000);
         this.applySegment(changed);
         this.changed();
     }
@@ -681,9 +700,7 @@ class TimerDisplay {
             s.remainingMs += ms;
         }
         s.durationMs += ms;
-        if (this.config.warning && this.remaining() > this.config.warning.secs * 1000) {
-            s.warned = false;
-        }
+        s.cuedSecond = 0;
         this.announce(this.str('announceaddtime', secs));
         this.changed();
     }
@@ -698,7 +715,7 @@ class TimerDisplay {
         const s = this.state;
         s.index = index;
         s.durationMs = this.segmentMs(index);
-        s.warned = false;
+        s.cuedSecond = 0;
         if (s.status === 'running') {
             s.endAt = (carryEnd === false ? performance.now() : carryEnd) + s.durationMs;
         } else {
@@ -727,7 +744,7 @@ class TimerDisplay {
     }
 
     /**
-     * Advance the engine: automatic changeovers and the warning cue.
+     * Advance the engine: automatic changeovers and the warning sounds.
      */
     tick() {
         const s = this.state;
@@ -736,12 +753,8 @@ class TimerDisplay {
         }
         const now = performance.now();
         const warning = this.config.warning || {};
-        if (this.control && warning.enabled && !s.warned && s.durationMs >= (warning.secs + 1) * 1000) {
-            const left = s.endAt - now;
-            if (left > 0 && left <= warning.secs * 1000) {
-                s.warned = true;
-                Audio.play({type: 'builtin', key: warning.sound});
-            }
+        if (this.control && warning.enabled && s.endAt > now) {
+            this.playWarning(s.endAt - now, warning);
         }
         if (s.endAt > now) {
             return;
@@ -767,6 +780,27 @@ class TimerDisplay {
         }
         this.applySegment(true);
         this.changed();
+    }
+
+    /**
+     * Warn in the last seconds of a segment: short sounds repeat every second, longer ones play once at the start.
+     *
+     * @param {number} left Time left in the segment, ms.
+     * @param {object} warning The display config's warning settings.
+     */
+    playWarning(left, warning) {
+        const s = this.state;
+        const second = Math.ceil(left / 1000);
+        // No cue at the very start of a segment, where the changeover sound plays.
+        if (second > warning.secs || second === s.cuedSecond || second * 1000 >= s.durationMs) {
+            return;
+        }
+        const inside = s.cuedSecond > 0 && s.cuedSecond <= warning.secs;
+        s.cuedSecond = second;
+        if (!REPEATED_WARNINGS.includes(warning.sound) && (inside || s.durationMs <= warning.secs * 1000)) {
+            return;
+        }
+        Audio.play({type: 'builtin', key: warning.sound});
     }
 
     /**
@@ -912,6 +946,7 @@ class TimerDisplay {
             this.el.countdown.classList.toggle('mod-fancytimer-long', text.length > 5);
             last.text = text;
         }
+        this.renderRing();
         const cyclefraction = this.cycleFraction();
         const width = (cyclefraction * 100).toFixed(2) + '%';
         if (this.el.cyclebarfill && last.width !== width) {
@@ -922,6 +957,27 @@ class TimerDisplay {
         if (this.el.cyclebar && last.cyclepct !== cyclepct) {
             this.el.cyclebar.setAttribute('aria-valuenow', cyclepct);
             last.cyclepct = cyclepct;
+        }
+    }
+
+    /**
+     * Draw the segment ring, when the timer shows one.
+     */
+    renderRing() {
+        if (!this.el.ring || !this.el.ringfill) {
+            return;
+        }
+        const last = this.lastRender;
+        const fraction = this.segmentFraction();
+        const offset = (RING_LENGTH * (1 - fraction)).toFixed(2);
+        if (last.offset !== offset) {
+            this.el.ringfill.setAttribute('stroke-dashoffset', offset);
+            last.offset = offset;
+        }
+        const segpct = String(Math.round(fraction * 100));
+        if (last.segpct !== segpct) {
+            this.el.ring.setAttribute('aria-valuenow', segpct);
+            last.segpct = segpct;
         }
     }
 

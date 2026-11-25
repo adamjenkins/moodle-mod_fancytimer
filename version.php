@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_fancytimer';
-$plugin->version = 2026112500;
+$plugin->version = 2026112501;
 $plugin->requires = 2026042000;
 $plugin->supported = [502, 503];
 $plugin->maturity = MATURITY_ALPHA;

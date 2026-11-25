@@ -30,6 +30,7 @@
     * cancontrol - whether the viewer runs the timer
     * ismirror - the opposite of cancontrol
     * hassegments - whether the timer has any segments
+    * showring - whether to show the progress ring of the current segment
     * segmentcount - number of segments
     * segmentsorder - running order: position, label, duration, isrotation, bgcolour, textcolour, iscurrent
     * firstlabel, firstbgcolour, firsttextcolour, firstduration, firstimageurl, firstposition - first render
@@ -46,6 +47,7 @@
         "cancontrol": true,
         "ismirror": false,
         "hassegments": true,
+        "showring": true,
         "segmentcount": 2,
         "segmentsorder": [
             {"position": 1, "label": "Person 1 is speaking", "duration": "2:00", "isrotation": false,
@@ -97,6 +99,18 @@
             </div>
 
             <div class="mod-fancytimer-countdown" data-region="countdown" role="timer" aria-atomic="true">{{firstduration}}</div>
+
+            {{#showring}}
+            <div class="mod-fancytimer-ring" data-region="ring" role="progressbar"
+                aria-label="{{#str}} progresssegment, mod_fancytimer {{/str}}"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <svg class="mod-fancytimer-ringsvg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                    <circle class="mod-fancytimer-ringtrack" cx="50" cy="50" r="44"></circle>
+                    <circle class="mod-fancytimer-ringfill" data-region="ringfill" cx="50" cy="50" r="44"
+                        stroke-dasharray="276.46" stroke-dashoffset="276.46" transform="rotate(-90 50 50)"></circle>
+                </svg>
+            </div>
+            {{/showring}}
         </div>
 
         <p class="mod-fancytimer-status" data-region="status">{{#ismirror}}{{mirrorwaiting}}{{/ismirror}}</p>

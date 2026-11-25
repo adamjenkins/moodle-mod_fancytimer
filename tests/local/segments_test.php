@@ -272,6 +272,7 @@ final class segments_test extends \advanced_testcase {
         $config['settings']['warningsecs'] = 8;
         $config['settings']['warningsound'] = 'pulse';
         $config['settings']['startsound'] = 'bell';
+        $config['settings']['showring'] = 1;
         segments::apply_config($timer, $config, $context);
 
         $new = segments::get_segments((int)$timer->id);
@@ -287,6 +288,7 @@ final class segments_test extends \advanced_testcase {
         $this->assertEquals(8, $stored->warningsecs);
         $this->assertSame('pulse', $stored->warningsound);
         $this->assertSame('bell', $stored->startsound);
+        $this->assertEquals(1, $stored->showring);
         $this->assertSame(
             get_string('templatelabel_changepartners', 'mod_fancytimer'),
             segments::get_rotation((int)$timer->id)->label

@@ -99,6 +99,7 @@ class view_page implements \core\output\named_templatable, \renderable {
             'cancontrol' => $this->cancontrol,
             'ismirror' => !$this->cancontrol,
             'hassegments' => $count > 0,
+            'showring' => !empty($this->fancytimer->showring),
             'segmentcount' => $count,
             'segmentsorder' => $order,
             'firstlabel' => $first ? $first['label'] : '',

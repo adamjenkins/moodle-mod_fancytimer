@@ -61,6 +61,7 @@ function fancytimer_supports($feature) {
 function fancytimer_settings_from_form(stdClass $data): stdClass {
     return (object)[
         'looping' => empty($data->looping) ? 0 : 1,
+        'showring' => empty($data->showring) ? 0 : 1,
         'warningenabled' => empty($data->warningenabled) ? 0 : 1,
         'warningsecs' => max(1, min(30, (int)($data->warningsecs ?? 5))),
         'warningsound' => sounds::clean_warning($data->warningsound ?? null),

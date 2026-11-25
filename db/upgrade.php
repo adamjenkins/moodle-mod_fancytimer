@@ -41,5 +41,14 @@ function xmldb_fancytimer_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026112500, 'fancytimer');
     }
 
+    if ($oldversion < 2026112501) {
+        $table = new xmldb_table('fancytimer');
+        $field = new xmldb_field('showring', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'startsound');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026112501, 'fancytimer');
+    }
+
     return true;
 }
