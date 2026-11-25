@@ -25,7 +25,7 @@ use mod_fancytimer\local\recordings;
 use mod_fancytimer\local\sounds;
 
 /**
- * mod_fancytimer_save_recording: store a changeover message recorded in the browser.
+ * mod_fancytimer_save_recording: store a sound recorded in the browser or uploaded from a file.
  *
  * @package    mod_fancytimer
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -44,7 +44,7 @@ class save_recording extends external_api {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'Course module id'),
             'name' => new external_value(PARAM_RAW, 'Name of the recording; may be empty'),
-            'mimetype' => new external_value(PARAM_RAW, 'Mime type reported by MediaRecorder'),
+            'mimetype' => new external_value(PARAM_RAW, 'Mime type reported by the browser'),
             'audio' => new external_value(PARAM_RAW, 'Audio, base64 without a data: prefix'),
         ]);
     }

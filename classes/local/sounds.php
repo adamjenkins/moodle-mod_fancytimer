@@ -124,6 +124,18 @@ class sounds {
     }
 
     /**
+     * Clean a starting sound key: as clean_changeover(), but anything unusable is silence.
+     *
+     * @param string|null $key
+     * @param int $fancytimerid 0 when there is no activity (presets, templates): recordings are then dropped.
+     * @return string
+     */
+    public static function clean_start(?string $key, int $fancytimerid): string {
+        $key = (string)$key;
+        return self::clean_changeover($key, $fancytimerid) === $key ? $key : self::NONE;
+    }
+
+    /**
      * Clean a warning cue key.
      *
      * @param string|null $key

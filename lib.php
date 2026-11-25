@@ -106,7 +106,10 @@ function fancytimer_add_instance($data, $mform = null) {
     $context = context_module::instance($data->coursemodule);
     // The template decides segments and rotation; the form's own settings win over the template's.
     $formsettings = (array)fancytimer_settings_from_form($data);
-    $config['settings'] = $formsettings + ['rotationenabled' => $config['settings']['rotationenabled']];
+    $config['settings'] = $formsettings + [
+        'rotationenabled' => $config['settings']['rotationenabled'],
+        'startsound' => $config['settings']['startsound'] ?? sounds::NONE,
+    ];
     segments::apply_config($record, $config, $context);
     return (int)$record->id;
 }

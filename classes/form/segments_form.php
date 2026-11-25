@@ -137,6 +137,20 @@ class segments_form extends \moodleform {
         $mform->addElement('hidden', 'id', $cm->id);
         $mform->setType('id', PARAM_INT);
 
+        // Sound at the start of the whole timer.
+        $mform->addElement('header', 'starthdr', get_string('starthdr', 'mod_fancytimer'));
+        $mform->setExpanded('starthdr', true);
+        $mform->addElement(
+            'selectgroups',
+            'startsound',
+            get_string('startsound', 'mod_fancytimer'),
+            $soundoptions,
+            ['data-fancytimer-sound' => 'changeover', 'data-fancytimer-fallback' => sounds::NONE]
+        );
+        $mform->setType('startsound', PARAM_RAW);
+        $mform->setDefault('startsound', sounds::NONE);
+        $mform->addHelpButton('startsound', 'startsound', 'mod_fancytimer');
+
         // Ordinary segments.
         $repeat = [];
         $repeatoptions = [];
@@ -163,7 +177,6 @@ class segments_form extends \moodleform {
             'spellcheck' => 'false']
         );
         $repeatoptions['bgcolour']['type'] = PARAM_RAW;
-        $repeatoptions['bgcolour']['default'] = segments::DEFAULT_BG;
 
         $repeat[] = $mform->createElement(
             'text',
@@ -173,7 +186,6 @@ class segments_form extends \moodleform {
             'spellcheck' => 'false']
         );
         $repeatoptions['textcolour']['type'] = PARAM_RAW;
-        $repeatoptions['textcolour']['default'] = segments::DEFAULT_TEXT;
 
         $repeat[] = $mform->createElement(
             'filemanager',
@@ -191,7 +203,6 @@ class segments_form extends \moodleform {
             ['data-fancytimer-sound' => 'changeover']
         );
         $repeatoptions['sound']['type'] = PARAM_RAW;
-        $repeatoptions['sound']['default'] = sounds::DEFAULT_CHANGEOVER;
 
         $repeat[] = $mform->createElement(
             'submit',
@@ -232,6 +243,13 @@ class segments_form extends \moodleform {
                 'image' => 'segmentimage', 'sound' => 'segmentsound'];
             foreach ($help as $field => $identifier) {
                 $mform->addHelpButton("{$field}[$i]", $identifier, 'mod_fancytimer');
+            }
+            // Defaults only for segments not stored yet. A repeat option 'default' is stored under the flat key
+            // "sound[0]", which beats the stored values set_data() passes as nested arrays.
+            if ($i >= $existing) {
+                $mform->setDefault("bgcolour[$i]", segments::DEFAULT_BG);
+                $mform->setDefault("textcolour[$i]", segments::DEFAULT_TEXT);
+                $mform->setDefault("sound[$i]", sounds::DEFAULT_CHANGEOVER);
             }
             foreach (['bgcolour', 'textcolour'] as $field) {
                 $mform->getElement("{$field}[$i]")->updateAttributes(['data-fancytimer-pair' => (string)$i]);

@@ -1,4 +1,4 @@
-# Fancy Timer 0.1.0 (2026112300)
+# Fancy Timer 0.1.0 (2026112500)
 
 First release (alpha) for Moodle 5.2 and 5.3.
 
@@ -6,8 +6,9 @@ First release (alpha) for Moodle 5.2 and 5.3.
   colour, picture and changeover sound, plus an optional rotation break. Can stop after one
   cycle or repeat.
 - Built-in sounds from gentle to alarming, made in the browser; teacher recordings made in the
-  browser; a Play button for every sound; an optional warning cue before each changeover.
-- Huge countdown with full-screen mode, progress ring and cycle bar, keyboard shortcuts, and
+  browser, or uploaded sound files; an optional starting sound; a Play button for every sound; an optional warning cue before each changeover.
+- Huge countdown with full-screen mode, a progress bar that can be clicked to jump, controls that can
+  be hidden, keyboard shortcuts, and
   start, pause, back, skip, reset and +30 s controls.
 - Phone remote through a QR code; students see a silent mirror of the teacher's timer.
 - Bundled templates, personal presets, and preset import and export as JSON.

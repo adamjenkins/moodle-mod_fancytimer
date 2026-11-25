@@ -11,12 +11,13 @@ example three speakers with two minutes each, and an optional rotation break at 
 - **Rotation break**, an optional final segment with its own label, colour and sound.
 - **Sounds**: a built-in library from gentle (soft chime, bell, gong) to alarming (buzzer, alarm,
   klaxon), made in the browser so nothing has to be downloaded. Teachers can also record their
-  own changeover message in the browser. Every sound in the settings has a Play button. An
+  own messages in the browser or upload sound files. A starting sound can play when the timer
+  begins. Every sound in the settings has a Play button. An
   optional warning cue sounds a few seconds before each changeover; it is off by default.
-- **Display**: a huge countdown, full-screen mode for projectors, a progress ring for the
-  current segment and a bar for the whole cycle, and the running order of segments.
+- **Display**: a huge countdown, full-screen mode for projectors, a progress bar for the
+  whole cycle that can be clicked to jump to any point, controls that can be hidden, and the running order of segments.
 - **Controls**: start, pause/resume, back, skip, reset and +30 s, with keyboard shortcuts:
-  Space start/pause, → skip, ← back, R reset, F full screen, + add 30 s, ? help.
+  Space start/pause, → skip, ← back, R reset, F full screen, H hide or show the controls, + add 30 s, ? help.
 - **Phone remote**: scan the QR code on the teacher's screen to control the timer from a phone.
   Students who open the activity see a silent mirror of the teacher's timer.
 - **Presets and templates**: bundled templates (Three-person talk, Pair talk, Think-pair-share,

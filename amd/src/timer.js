@@ -31,9 +31,6 @@ import Pending from 'core/pending';
 import {getStrings} from 'core/str';
 import * as Audio from 'mod_fancytimer/audio';
 
-/** @type {number} Ring circumference (r = 44 in a 100 x 100 viewBox). */
-const RING_LENGTH = 2 * Math.PI * 44;
-
 /** @type {number} Seconds added by the +30 s control and key. */
 const ADD_SECONDS = 30;
 
@@ -54,7 +51,7 @@ const FLASH_MS = 1000;
 
 /** @type {string[]} Strings used here (component mod_fancytimer). */
 const STRING_KEYS = [
-    'announceaddtime', 'announcechangeover', 'announcefinished', 'announcepaused', 'announcereset',
+    'announceaddtime', 'announcechangeover', 'announcecontrolshidden', 'announcefinished', 'announcepaused', 'announcereset',
     'announceresumed', 'announcestarted', 'control_exitfullscreen', 'control_fullscreen', 'control_pause',
     'control_resume', 'mirrorstale', 'mirrorwaiting', 'segmentposition', 'segmentunnamed', 'statusfinished',
     'statuspaused',
@@ -190,20 +187,20 @@ class TimerDisplay {
             position: q('position'),
             imagewrap: q('imagewrap'),
             countdown: q('countdown'),
-            ring: q('ring'),
-            ringfill: q('ringfill'),
             status: q('status'),
             cyclebar: q('cyclebar'),
             cyclebarfill: q('cyclebarfill'),
             soundprompt: q('soundprompt'),
             announcer: q('announcer'),
+            controls: q('controls'),
             remotepanel: q('remotepanel'),
             helppanel: q('helppanel'),
             order: q('order'),
         };
         const a = (action) => this.root.querySelector(`[data-action="${action}"]`);
         this.btn = {};
-        ['start', 'toggle', 'previous', 'next', 'reset', 'addtime', 'fullscreen', 'remote', 'help'].forEach((name) => {
+        ['start', 'toggle', 'previous', 'next', 'reset', 'addtime', 'fullscreen', 'hidecontrols', 'remote',
+            'help'].forEach((name) => {
             this.btn[name] = a(name);
         });
     }
@@ -253,6 +250,8 @@ class TimerDisplay {
             on('fullscreen', () => this.toggleFullscreen());
             on('remote', () => this.togglePanel('remote'));
             on('help', () => this.togglePanel('help'));
+            this.bindHideControls();
+            this.bindSeek();
             document.addEventListener('keydown', (e) => this.onKey(e));
             if (this.btn.fullscreen && !this.fullscreenSupported()) {
                 this.btn.fullscreen.classList.add('d-none');
@@ -273,6 +272,129 @@ class TimerDisplay {
                 this.schedulePoll(0);
             }
         });
+    }
+
+    /**
+     * Hide the controls with the button; a click anywhere on the stage brings them back.
+     */
+    bindHideControls() {
+        if (!this.btn.hidecontrols || !this.el.stage) {
+            return;
+        }
+        this.btn.hidecontrols.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Not a click on the stage, which would show the controls again.
+            e.stopPropagation();
+            this.setControlsHidden(true);
+        });
+        this.el.stage.addEventListener('click', () => this.setControlsHidden(false));
+    }
+
+    /**
+     * Hide or show the controls (and any open panel).
+     *
+     * @param {boolean} hidden
+     */
+    setControlsHidden(hidden) {
+        const controls = this.el.controls;
+        if (!controls || controls.hidden === hidden) {
+            return;
+        }
+        if (hidden) {
+            this.closePanels();
+            const hadFocus = controls.contains(document.activeElement);
+            controls.hidden = true;
+            if (hadFocus) {
+                this.el.stage.tabIndex = -1;
+                this.el.stage.focus({preventScroll: true});
+            }
+            this.announce(this.str('announcecontrolshidden'));
+        } else {
+            controls.hidden = false;
+        }
+        this.el.stage.classList.toggle('mod-fancytimer-controlshidden', hidden);
+    }
+
+    /**
+     * Click or use the keyboard on the progress bar to jump through the cycle.
+     */
+    bindSeek() {
+        const bar = this.el.cyclebar;
+        if (!bar) {
+            return;
+        }
+        bar.addEventListener('click', (e) => {
+            const rect = bar.getBoundingClientRect();
+            if (!rect.width) {
+                return;
+            }
+            const fraction = (e.clientX - rect.left) / rect.width;
+            this.seek(window.getComputedStyle(bar).direction === 'rtl' ? 1 - fraction : fraction);
+        });
+        bar.addEventListener('keydown', (e) => {
+            const steps = {ArrowRight: 0.01, ArrowUp: 0.01, ArrowLeft: -0.01, ArrowDown: -0.01, PageUp: 0.1, PageDown: -0.1,
+                Home: -1, End: 1};
+            if (e.ctrlKey || e.metaKey || e.altKey || !Object.prototype.hasOwnProperty.call(steps, e.key)) {
+                return;
+            }
+            // Handled here, so the page's own arrow shortcuts leave it alone.
+            e.preventDefault();
+            this.seek(this.cycleFraction() + steps[e.key]);
+        });
+    }
+
+    /**
+     * How far through the cycle the timer is.
+     *
+     * @returns {number} 0..1
+     */
+    cycleFraction() {
+        const s = this.state;
+        if (s.status === 'finished') {
+            return 1;
+        }
+        const done = s.durationMs > 0 ? Math.min(1, Math.max(0, 1 - this.remaining() / s.durationMs)) : 0;
+        let before = 0;
+        for (let i = 0; i < s.index && i < this.segments.length; i++) {
+            before += this.segmentMs(i);
+        }
+        return Math.min(1, (before + done * this.segmentMs(s.index)) / this.cyclems);
+    }
+
+    /**
+     * Jump to a point in the cycle; a running timer keeps running from there.
+     *
+     * @param {number} fraction 0..1
+     */
+    seek(fraction) {
+        const s = this.state;
+        if (!this.segments.length) {
+            return;
+        }
+        // Never quite the end: the last instant plays out, so the ending happens as usual.
+        let offset = Math.min(this.cyclems - 1, Math.max(0, fraction * this.cyclems));
+        let index = 0;
+        while (index < this.segments.length - 1 && offset >= this.segmentMs(index)) {
+            offset -= this.segmentMs(index);
+            index++;
+        }
+        if (s.status === 'finished') {
+            s.status = 'paused';
+        }
+        const changed = index !== s.index;
+        if (changed) {
+            this.setIndex(index, false);
+        }
+        // Added time (+30 s) stretches the segment, so its share of the bar covers the longer length.
+        const left = s.durationMs * (1 - offset / this.segmentMs(index));
+        if (s.status === 'running') {
+            s.endAt = performance.now() + left;
+        } else {
+            s.remainingMs = left;
+        }
+        s.warned = !!this.config.warning && left <= this.config.warning.secs * 1000;
+        this.applySegment(changed);
+        this.changed();
     }
 
     /**
@@ -299,9 +421,11 @@ class TimerDisplay {
             'R': () => this.reset(),
             'f': () => this.toggleFullscreen(),
             'F': () => this.toggleFullscreen(),
+            'h': () => this.toggleControls(),
+            'H': () => this.toggleControls(),
             '+': () => this.addTime(ADD_SECONDS),
             '=': () => this.addTime(ADD_SECONDS),
-            '?': () => this.togglePanel('help'),
+            '?': () => this.showHelp(),
         };
         if (Object.prototype.hasOwnProperty.call(actions, e.key)) {
             actions[e.key]();
@@ -332,9 +456,10 @@ class TimerDisplay {
      * Unlock audio from a gesture, or note that sound still needs one.
      *
      * @param {boolean} fromUser Whether a click or key on this page triggered it.
+     * @returns {Promise<void>} Never rejects.
      */
     unlockAudio(fromUser) {
-        Audio.unlock().then(() => {
+        return Audio.unlock().then(() => {
             const unlocked = Audio.isUnlocked();
             if (unlocked) {
                 Audio.preload(this.soundDescriptors());
@@ -376,6 +501,9 @@ class TimerDisplay {
      */
     soundDescriptors() {
         const list = this.segments.map((s) => s.sound);
+        if (this.config.startsound) {
+            list.push(this.config.startsound);
+        }
         if (this.config.warning && this.config.warning.enabled) {
             list.push({type: 'builtin', key: this.config.warning.sound});
         }
@@ -391,7 +519,7 @@ class TimerDisplay {
         if (!this.segments.length) {
             return;
         }
-        this.unlockAudio(fromUser);
+        const unlocking = this.unlockAudio(fromUser);
         const s = this.state;
         if (s.status === 'running') {
             return;
@@ -407,9 +535,24 @@ class TimerDisplay {
         }
         s.status = 'running';
         s.endAt = performance.now() + s.remainingMs;
+        this.playStartSound(unlocking);
         this.acquireWakeLock();
         this.announce(this.str('announcestarted'));
         this.changed();
+    }
+
+    /**
+     * Play the starting sound once audio is unlocked (if the timer is still running then).
+     *
+     * @param {Promise} unlocking From unlockAudio().
+     */
+    playStartSound(unlocking) {
+        unlocking.then(() => {
+            if (this.control && this.state.status === 'running') {
+                Audio.play(this.config.startsound);
+            }
+            return undefined;
+        }).catch(() => undefined);
     }
 
     /**
@@ -758,10 +901,9 @@ class TimerDisplay {
     }
 
     /**
-     * Draw the countdown, the ring and the cycle bar (DOM writes only when something changed).
+     * Draw the countdown and the cycle bar (DOM writes only when something changed).
      */
     renderTime() {
-        const s = this.state;
         const left = this.remaining();
         const text = formatTime(left);
         const last = this.lastRender;
@@ -770,27 +912,11 @@ class TimerDisplay {
             this.el.countdown.classList.toggle('mod-fancytimer-long', text.length > 5);
             last.text = text;
         }
-        const segfraction = s.durationMs > 0 ? Math.min(1, Math.max(0, 1 - left / s.durationMs)) : 0;
-        let before = 0;
-        for (let i = 0; i < s.index && i < this.segments.length; i++) {
-            before += this.segmentMs(i);
-        }
-        const cyclefraction = s.status === 'finished' ? 1 :
-            Math.min(1, (before + segfraction * this.segmentMs(s.index)) / this.cyclems);
-        const offset = (RING_LENGTH * (1 - segfraction)).toFixed(2);
-        if (this.el.ringfill && last.offset !== offset) {
-            this.el.ringfill.setAttribute('stroke-dashoffset', offset);
-            last.offset = offset;
-        }
+        const cyclefraction = this.cycleFraction();
         const width = (cyclefraction * 100).toFixed(2) + '%';
         if (this.el.cyclebarfill && last.width !== width) {
             this.el.cyclebarfill.style.width = width;
             last.width = width;
-        }
-        const segpct = String(Math.round(segfraction * 100));
-        if (this.el.ring && last.segpct !== segpct) {
-            this.el.ring.setAttribute('aria-valuenow', segpct);
-            last.segpct = segpct;
         }
         const cyclepct = String(Math.round(cyclefraction * 100));
         if (this.el.cyclebar && last.cyclepct !== cyclepct) {
@@ -931,6 +1057,23 @@ class TimerDisplay {
         const open = panel.hidden;
         panel.hidden = !open;
         button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    /**
+     * Open or close the shortcuts list, bringing hidden controls back first.
+     */
+    showHelp() {
+        this.setControlsHidden(false);
+        this.togglePanel('help');
+    }
+
+    /**
+     * Hide the controls if they show, else show them.
+     */
+    toggleControls() {
+        if (this.el.controls) {
+            this.setControlsHidden(!this.el.controls.hidden);
+        }
     }
 
     /**

@@ -149,6 +149,42 @@ final class segments_form_test extends \advanced_testcase {
     }
 
     /**
+     * Stored values win over the defaults, which apply only to segments added in the form.
+     */
+    public function test_stored_values_are_shown(): void {
+        $mformof = fn($form) => (new \ReflectionProperty(\moodleform::class, '_form'))->getValue($form);
+        $form = $this->make_form();
+        $form->set_data([
+            'label' => [0 => 'One', 1 => 'Two', 2 => 'Three'],
+            'duration' => [1 => ['minutes' => 3, 'seconds' => 45]],
+            'bgcolour' => [0 => '#111111', 1 => '#222222', 2 => '#333333'],
+            'textcolour' => [0 => '#eeeeee', 1 => '#dddddd', 2 => '#cccccc'],
+            'sound' => [0 => 'gong', 1 => 'none', 2 => 'alarm'],
+            'image' => [1 => 4242],
+            'startsound' => 'klaxon',
+        ]);
+        $mform = $mformof($form);
+        $this->assertSame('Two', $mform->getElement('label[1]')->getValue());
+        $this->assertSame('#222222', $mform->getElement('bgcolour[1]')->getValue());
+        $this->assertSame('#cccccc', $mform->getElement('textcolour[2]')->getValue());
+        $this->assertEquals('gong', current((array)$mform->getElement('sound[0]')->getValue()));
+        $this->assertEquals('none', current((array)$mform->getElement('sound[1]')->getValue()));
+        $this->assertEquals(4242, $mform->getElement('image[1]')->getValue());
+        $this->assertEquals('klaxon', current((array)$mform->getElement('startsound')->getValue()));
+        $duration = $mform->getElement('duration[1]')->getElements();
+        $this->assertEquals([3, 45], [current((array)$duration[0]->getValue()), current((array)$duration[2]->getValue())]);
+
+        // A fourth, added segment starts from the defaults.
+        $post = $this->valid_post();
+        unset($post['submitbutton']);
+        $post[segments_form::ADD_NAME] = 'Add';
+        segments_form::mock_submit($post);
+        $mform = $mformof($this->make_form());
+        $this->assertSame(segments::DEFAULT_BG, $mform->getElement('bgcolour[3]')->getValue());
+        $this->assertEquals('chime', current((array)$mform->getElement('sound[3]')->getValue()));
+    }
+
+    /**
      * A segment without a label is refused with the label error on that segment.
      */
     public function test_missing_label(): void {

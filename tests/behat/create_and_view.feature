@@ -35,3 +35,14 @@ Feature: Add a Fancy Timer and view it
     Then I should see "This screen shows the teacher's timer."
     And I should see "Person 1 is speaking"
     And "Start" "button" should not exist
+
+  @javascript
+  Scenario: A teacher hides the controls and brings them back by clicking the timer
+    Given the following "activities" exist:
+      | activity   | name              | course | idnumber |
+      | fancytimer | Speaking practice | C1     | timer1   |
+    And I am on the "Speaking practice" "fancytimer activity" page logged in as "teacher1"
+    When I click on "Hide controls" "button"
+    Then "Skip" "button" should not be visible
+    And I click on "[data-region='countdown']" "css_element"
+    And "Skip" "button" should be visible

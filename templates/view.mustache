@@ -97,22 +97,14 @@
             </div>
 
             <div class="mod-fancytimer-countdown" data-region="countdown" role="timer" aria-atomic="true">{{firstduration}}</div>
-
-            <div class="mod-fancytimer-ring" data-region="ring" role="progressbar"
-                aria-label="{{#str}} progresssegment, mod_fancytimer {{/str}}"
-                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                <svg class="mod-fancytimer-ringsvg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                    <circle class="mod-fancytimer-ringtrack" cx="50" cy="50" r="44"></circle>
-                    <circle class="mod-fancytimer-ringfill" data-region="ringfill" cx="50" cy="50" r="44"
-                        stroke-dasharray="276.46" stroke-dashoffset="276.46" transform="rotate(-90 50 50)"></circle>
-                </svg>
-            </div>
         </div>
 
         <p class="mod-fancytimer-status" data-region="status">{{#ismirror}}{{mirrorwaiting}}{{/ismirror}}</p>
 
         <div class="mod-fancytimer-cycle">
-            <div class="mod-fancytimer-bar" data-region="cyclebar" role="progressbar"
+            <div class="mod-fancytimer-bar{{#cancontrol}} mod-fancytimer-seekable{{/cancontrol}}" data-region="cyclebar"
+                {{#cancontrol}}role="slider" tabindex="0" title="{{#str}} seekhint, mod_fancytimer {{/str}}"{{/cancontrol}}
+                {{^cancontrol}}role="progressbar"{{/cancontrol}}
                 aria-label="{{#str}} progresscycle, mod_fancytimer {{/str}}"
                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="mod-fancytimer-barfill" data-region="cyclebarfill"></div>
@@ -127,7 +119,7 @@
         <div class="visually-hidden" data-region="announcer" aria-live="polite" aria-atomic="true"></div>
 
         {{#cancontrol}}
-        <div class="mod-fancytimer-controls" role="group" aria-label="{{#str}} controls, mod_fancytimer {{/str}}">
+        <div class="mod-fancytimer-controls" data-region="controls" role="group" aria-label="{{#str}} controls, mod_fancytimer {{/str}}">
             <button type="button" class="btn btn-primary" data-action="start">{{#str}} control_start, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-secondary d-none" data-action="toggle" aria-pressed="false">{{#str}} control_pause, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-secondary" data-action="previous">{{#str}} control_back, mod_fancytimer {{/str}}</button>
@@ -135,6 +127,8 @@
             <button type="button" class="btn btn-secondary" data-action="reset">{{#str}} control_reset, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-secondary" data-action="addtime">{{#str}} control_addtime, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-secondary" data-action="fullscreen" aria-pressed="false">{{#str}} control_fullscreen, mod_fancytimer {{/str}}</button>
+            <button type="button" class="btn btn-secondary" data-action="hidecontrols"
+                title="{{#str}} control_hidehint, mod_fancytimer {{/str}}">{{#str}} control_hide, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-outline-secondary" data-action="remote"
                 aria-expanded="false" aria-controls="{{rootid}}-remote">{{#str}} remote, mod_fancytimer {{/str}}</button>
             <button type="button" class="btn btn-outline-secondary" data-action="help"
@@ -167,6 +161,8 @@
                 <dd>{{#str}} shortcut_reset, mod_fancytimer {{/str}}</dd>
                 <dt><kbd>F</kbd></dt>
                 <dd>{{#str}} shortcut_fullscreen, mod_fancytimer {{/str}}</dd>
+                <dt><kbd>H</kbd></dt>
+                <dd>{{#str}} shortcut_hidecontrols, mod_fancytimer {{/str}}</dd>
                 <dt><kbd>+</kbd></dt>
                 <dd>{{#str}} shortcut_addtime, mod_fancytimer {{/str}}</dd>
                 <dt><kbd>?</kbd></dt>

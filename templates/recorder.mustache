@@ -28,6 +28,7 @@
     * hasrecordings - whether the list is non-empty
     * recordingurls - JSON object {"<id>": "<url>"} read by mod_fancytimer/sound_preview
     * maxseconds - recordings stop after this many seconds
+    * maxbytes, maxsize - largest uploaded sound, in bytes and as text
     * maxrecordings - most recordings an activity may have
     * defaultname - suggested name for a new recording
     * canaddmore - false when the activity has the most recordings allowed
@@ -42,13 +43,16 @@
         "hasrecordings": true,
         "recordingurls": "{\"3\": \"https://example.com/r.webm\"}",
         "maxseconds": 60,
+        "maxbytes": 5242880,
+        "maxsize": "5 MB",
         "maxrecordings": 30,
         "defaultname": "Change to the next person",
         "canaddmore": true
     }
 }}
 <section id="{{rootid}}" class="mod-fancytimer-recorder mt-5" aria-labelledby="{{rootid}}-heading"
-        data-region="mod-fancytimer-recorder" data-cmid="{{cmid}}" data-maxseconds="{{maxseconds}}"
+        data-region="mod-fancytimer-recorder" data-cmid="{{cmid}}" data-maxseconds="{{maxseconds}}" data-maxbytes="{{maxbytes}}"
+        data-maxsize="{{maxsize}}"
         data-maxrecordings="{{maxrecordings}}"
         data-canaddmore="{{#canaddmore}}1{{/canaddmore}}{{^canaddmore}}0{{/canaddmore}}"
         data-fancytimer-recordingurls="{{recordingurls}}">
@@ -67,7 +71,12 @@
             <button type="button" class="btn btn-primary" data-action="record">
                 <span class="mod-fancytimer-recorder-dot me-2" aria-hidden="true"></span>{{#str}}record, mod_fancytimer{{/str}}
             </button>
-            <p class="form-text mt-2 mb-0">{{#str}}recordingmax, mod_fancytimer, {{maxseconds}}{{/str}}</p>
+            <button type="button" class="btn btn-secondary ms-2" data-action="upload">{{#str}}uploadsound, mod_fancytimer{{/str}}</button>
+            <input type="file" class="d-none" data-region="file" tabindex="-1"
+                aria-label="{{#str}}uploadsound, mod_fancytimer{{/str}}"
+                accept=".mp3,.wav,.ogg,.oga,.webm,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/webm,audio/mp4">
+            <p class="form-text mt-2 mb-0">{{#str}}recordingmax, mod_fancytimer, {{maxseconds}}{{/str}}
+                {{#str}}uploadsoundtypes, mod_fancytimer, {{maxsize}}{{/str}}</p>
         </div>
 
         <div class="d-none" data-region="recording">

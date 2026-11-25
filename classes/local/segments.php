@@ -227,7 +227,7 @@ class segments {
     /**
      * Replace a timer's whole configuration from a preset/template config (see preset_format).
      *
-     * Updates the instance settings (looping, rotationenabled, warning*), replaces every
+     * Updates the instance settings (looping, rotationenabled, warning*, startsound), replaces every
      * segment (dropping images) and the rotation segment.
      *
      * @param stdClass $fancytimer Instance record (updated in place and in the DB).
@@ -253,6 +253,7 @@ class segments {
         $fancytimer->warningenabled = (int)$settings['warningenabled'];
         $fancytimer->warningsecs = (int)$settings['warningsecs'];
         $fancytimer->warningsound = sounds::clean_warning($settings['warningsound']);
+        $fancytimer->startsound = sounds::clean_start($settings['startsound'] ?? null, $id);
         $fancytimer->timemodified = time();
         $DB->update_record('fancytimer', (object)[
             'id' => $id,
@@ -261,6 +262,7 @@ class segments {
             'warningenabled' => $fancytimer->warningenabled,
             'warningsecs' => $fancytimer->warningsecs,
             'warningsound' => $fancytimer->warningsound,
+            'startsound' => $fancytimer->startsound,
             'timemodified' => $fancytimer->timemodified,
         ]);
     }

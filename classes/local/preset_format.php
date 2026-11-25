@@ -29,14 +29,14 @@ use stdClass;
  *       "version": 1,
  *       "name": "Three-person talk",
  *       "settings": {"looping": 1, "rotationenabled": 1, "warningenabled": 0,
- *                    "warningsecs": 5, "warningsound": "tick"},
+ *                    "warningsecs": 5, "warningsound": "tick", "startsound": "none"},
  *       "segments": [{"label": "Person 1 is speaking", "duration": 120,
  *                     "bgcolour": "#cfe2ff", "textcolour": "#212529", "sound": "chime"}],
  *       "rotation": {"label": "Change groups!", "duration": 30, ...} | null
  *     }
  *
  * Images and recordings are not part of the format: recording sounds become the
- * default chime when the config leaves its activity. Everything read from a file
+ * default chime (a recorded starting sound: none) when the config leaves its activity. Everything read from a file
  * or the database goes through validate(), which is the trust boundary.
  *
  * @package    mod_fancytimer
@@ -98,6 +98,7 @@ class preset_format {
                 'warningenabled' => empty($settings['warningenabled']) ? 0 : 1,
                 'warningsecs' => max(1, min(30, (int)($settings['warningsecs'] ?? 5))),
                 'warningsound' => sounds::clean_warning($settings['warningsound'] ?? null),
+                'startsound' => sounds::clean_start($settings['startsound'] ?? null, $fancytimerid),
             ],
             'segments' => $segments,
             'rotation' => $rotation,
@@ -136,6 +137,10 @@ class preset_format {
                 'warningenabled' => (int)$fancytimer->warningenabled,
                 'warningsecs' => (int)$fancytimer->warningsecs,
                 'warningsound' => sounds::clean_warning($fancytimer->warningsound),
+                'startsound' => sounds::clean_start(
+                    $fancytimer->startsound ?? null,
+                    $keeprecordings ? (int)$fancytimer->id : 0
+                ),
             ],
             'segments' => array_map($strip, segments::get_segments((int)$fancytimer->id)),
             'rotation' => $rotation ? $strip($rotation) : null,

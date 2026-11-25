@@ -32,8 +32,8 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class recordings {
-    /** @var int Largest recording accepted, bytes (about 2 minutes of Opus speech). */
-    public const MAX_BYTES = 2097152;
+    /** @var int Largest recording or uploaded sound accepted, bytes. */
+    public const MAX_BYTES = 5242880;
 
     /** @var int Most recordings per activity. */
     public const MAX_PER_ACTIVITY = 30;
@@ -45,6 +45,16 @@ class recordings {
         'audio/mp4' => 'm4a',
         'audio/mpeg' => 'mp3',
         'audio/wav' => 'wav',
+    ];
+
+    /** @var array Other names browsers give the accepted types of an uploaded file => accepted type. */
+    public const MIMETYPE_ALIASES = [
+        'audio/mp3' => 'audio/mpeg',
+        'audio/x-wav' => 'audio/wav',
+        'audio/wave' => 'audio/wav',
+        'audio/vnd.wave' => 'audio/wav',
+        'audio/x-m4a' => 'audio/mp4',
+        'audio/m4a' => 'audio/mp4',
     ];
 
     /**
@@ -65,7 +75,7 @@ class recordings {
      * @param int $fancytimerid
      * @param int $userid
      * @param string $name
-     * @param string $mimetype As reported by MediaRecorder; parameters (";codecs=opus") are ignored.
+     * @param string $mimetype As reported by the browser; parameters (";codecs=opus") are ignored.
      * @param string $bytes Raw audio.
      * @return stdClass The new record.
      * @throws moodle_exception recordinginvalid / recordingtoolarge / toomanyrecordings
@@ -80,6 +90,7 @@ class recordings {
     ): stdClass {
         global $DB;
         $type = strtolower(trim(explode(';', $mimetype)[0]));
+        $type = self::MIMETYPE_ALIASES[$type] ?? $type;
         if (!isset(self::MIMETYPES[$type]) || $bytes === '') {
             throw new moodle_exception('recordinginvalid', 'mod_fancytimer');
         }
@@ -110,7 +121,7 @@ class recordings {
     }
 
     /**
-     * Delete a recording; segments that used it fall back to the default sound.
+     * Delete a recording; segments that used it fall back to the default sound, a starting sound to silence.
      *
      * @param context_module $context
      * @param stdClass $recording
@@ -122,6 +133,12 @@ class recordings {
             'sound',
             sounds::DEFAULT_CHANGEOVER,
             ['fancytimerid' => $recording->fancytimerid, 'sound' => sounds::RECORDING_PREFIX . $recording->id]
+        );
+        $DB->set_field(
+            'fancytimer',
+            'startsound',
+            sounds::NONE,
+            ['id' => $recording->fancytimerid, 'startsound' => sounds::RECORDING_PREFIX . $recording->id]
         );
         get_file_storage()->delete_area_files($context->id, 'mod_fancytimer', 'recording', $recording->id);
         $DB->delete_records('fancytimer_recordings', ['id' => $recording->id]);

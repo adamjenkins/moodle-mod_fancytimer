@@ -72,6 +72,7 @@ class templates {
             'warningenabled' => 0,
             'warningsecs' => 5,
             'warningsound' => sounds::DEFAULT_WARNING,
+            'startsound' => sounds::NONE,
         ];
         switch ($key) {
             case 'threeperson':

@@ -149,7 +149,7 @@ final class preset_format_test extends \advanced_testcase {
         unset($config['settings']);
         $out = preset_format::validate($config);
         $this->assertSame(['looping' => 0, 'rotationenabled' => 0, 'warningenabled' => 0, 'warningsecs' => 5,
-            'warningsound' => sounds::DEFAULT_WARNING], $out['settings']);
+            'warningsound' => sounds::DEFAULT_WARNING, 'startsound' => 'none'], $out['settings']);
     }
 
     /**
@@ -184,6 +184,7 @@ final class preset_format_test extends \advanced_testcase {
         $rec = $this->getDataGenerator()->get_plugin_generator('mod_fancytimer')->create_recording($timer);
         $first = segments::get_segments((int)$timer->id)[0];
         $DB->set_field('fancytimer_segments', 'sound', 'rec:' . $rec->id, ['id' => $first->id]);
+        $DB->set_field('fancytimer', 'startsound', 'rec:' . $rec->id, ['id' => $timer->id]);
         $timer = $DB->get_record('fancytimer', ['id' => $timer->id], '*', MUST_EXIST);
 
         $export = preset_format::from_instance($timer);
@@ -192,10 +193,11 @@ final class preset_format_test extends \advanced_testcase {
         $this->assertCount(3, $export['segments']);
         $this->assertNotNull($export['rotation']);
         $this->assertSame(['looping' => 0, 'rotationenabled' => 1, 'warningenabled' => 1, 'warningsecs' => 7,
-            'warningsound' => 'pulse'], $export['settings']);
+            'warningsound' => 'pulse', 'startsound' => 'none'], $export['settings']);
 
         $kept = preset_format::from_instance($timer, true);
         $this->assertSame('rec:' . $rec->id, $kept['segments'][0]['sound']);
+        $this->assertSame('rec:' . $rec->id, $kept['settings']['startsound']);
         $this->assertSame('chime', $kept['segments'][1]['sound']);
 
         // Export → JSON → validate gives the same config back.

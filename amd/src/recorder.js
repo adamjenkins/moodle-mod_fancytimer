@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Teacher recordings on the segment editor: record with MediaRecorder, save through
+ * Teacher sounds on the segment editor: record with MediaRecorder or upload a file, save through
  * mod_fancytimer_save_recording, play and delete saved recordings.
  *
  * @module     mod_fancytimer/recorder
@@ -32,6 +32,16 @@ import {registerRecording, removeRecording} from 'mod_fancytimer/sound_preview';
 
 /** @var {string[]} Container types to try, best first. */
 const MIMETYPES = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
+
+/** @var {Object} File name extension => audio type; browsers often report no type, or another name, for a file. */
+const EXTENSIONS = {
+    mp3: 'audio/mpeg',
+    wav: 'audio/wav',
+    ogg: 'audio/ogg',
+    oga: 'audio/ogg',
+    webm: 'audio/webm',
+    m4a: 'audio/mp4',
+};
 
 /** @var {number} How long getUserMedia may take (a permission prompt included), ms. */
 const MIC_TIMEOUT = 30000;
@@ -130,7 +140,11 @@ class Recorder {
         this.started = 0;
         this.busy = false;
 
+        this.maxbytes = parseInt(root.dataset.maxbytes, 10) || 0;
+
         root.addEventListener('click', (e) => this.handleClick(e));
+        this.region('file').addEventListener('change', () => this.chooseFile());
+        this.button('upload').disabled = !this.canaddmore;
 
         if (!supported()) {
             this.region('unsupported').classList.remove('d-none');
@@ -154,6 +168,8 @@ class Recorder {
         const item = target.closest('[data-region="item"]');
         if (action === 'record') {
             this.start();
+        } else if (action === 'upload') {
+            this.region('file').click();
         } else if (action === 'stop') {
             this.stop();
         } else if (action === 'save') {
@@ -278,13 +294,49 @@ class Recorder {
             this.status(this.strings.empty);
             return;
         }
+        this.offer(this.blob, this.blobtype, this.strings.defaultname, this.strings.stopped);
+    }
+
+    /**
+     * Offer the preview of a sound file the teacher chose.
+     */
+    chooseFile() {
+        const input = this.region('file');
+        const file = input.files && input.files[0];
+        if (!file || this.busy || this.mediarecorder) {
+            return;
+        }
+        const match = /^(.*)\.([^.]+)$/.exec(file.name);
+        const type = match ? EXTENSIONS[match[2].toLowerCase()] : null;
+        if (!type) {
+            this.status(this.strings.badtype);
+        } else if (!file.size || (this.maxbytes && file.size > this.maxbytes)) {
+            this.status(this.strings.badsize);
+        } else {
+            this.offer(file, type, match[1].substring(0, 255), this.strings.uploadready);
+        }
+        // Choosing the same file again must fire a change event.
+        input.value = '';
+    }
+
+    /**
+     * Show a new sound for listening, naming and saving.
+     *
+     * @param {Blob} blob
+     * @param {string} type Audio type.
+     * @param {string} suggested Suggested name.
+     * @param {string} message Status text.
+     */
+    offer(blob, type, suggested, message) {
         this.clearPreview();
-        this.previewurl = URL.createObjectURL(this.blob);
+        this.blob = blob;
+        this.blobtype = type;
+        this.previewurl = URL.createObjectURL(blob);
         this.region('preview').src = this.previewurl;
         const name = this.region('name');
-        name.value = this.strings.defaultname;
+        name.value = suggested;
         this.show('recorded');
-        this.status(this.strings.stopped);
+        this.status(message);
         name.focus();
         name.select();
     }
@@ -303,6 +355,14 @@ class Recorder {
     }
 
     /**
+     * Focus Record, or Upload where recording is not available.
+     */
+    focusIdle() {
+        const record = this.button('record');
+        (record.disabled ? this.button('upload') : record).focus();
+    }
+
+    /**
      * Throw the new recording away.
      */
     discard() {
@@ -310,7 +370,7 @@ class Recorder {
         this.blob = null;
         this.show('idle');
         this.status(this.strings.discarded);
-        this.button('record').focus();
+        this.focusIdle();
     }
 
     /**
@@ -338,7 +398,7 @@ class Recorder {
             this.blob = null;
             this.show('idle');
             this.status(this.strings.saved);
-            this.button('record').focus();
+            this.focusIdle();
         } catch (e) {
             this.status('');
             Notification.exception(e);
@@ -400,6 +460,7 @@ class Recorder {
             this.canaddmore = this.region('list').querySelectorAll('[data-region="item"]').length < max;
         }
         this.region('full').classList.toggle('d-none', this.canaddmore);
+        this.button('upload').disabled = !this.canaddmore;
         if (!this.mediarecorder && supported()) {
             this.button('record').disabled = !this.canaddmore;
         }
@@ -458,7 +519,7 @@ class Recorder {
             this.updateLimit();
             this.status(this.strings.deleted);
             addToast(this.strings.deleted);
-            this.button('record').focus();
+            this.focusIdle();
         } catch (e) {
             Notification.exception(e);
         } finally {
@@ -481,8 +542,11 @@ export const init = async(rootId) => {
     root.dataset.initialised = '1';
     const keys = ['recordingdefaultname', 'recordingmicdenied', 'recordingstarted', 'recordingstopped',
         'recordingempty', 'recordingdiscarded', 'recordingsaving', 'recordingsaved', 'playrecording',
-        'deleterecording', 'deleterecordingtitle', 'recordingdeleted', 'soundpreviewfailed'];
-    const values = await getStrings(keys.map((key) => ({key, component: 'mod_fancytimer'})));
+        'deleterecording', 'deleterecordingtitle', 'recordingdeleted', 'soundpreviewfailed', 'uploadbadtype',
+        'uploadready'];
+    const requests = keys.map((key) => ({key, component: 'mod_fancytimer'}));
+    requests.push({key: 'uploadbadsize', component: 'mod_fancytimer', param: root.dataset.maxsize});
+    const values = await getStrings(requests);
     const strings = {
         defaultname: values[0],
         micdenied: values[1],
@@ -497,6 +561,9 @@ export const init = async(rootId) => {
         deletetitle: values[10],
         deleted: values[11],
         playfailed: values[12],
+        badtype: values[13],
+        uploadready: values[14],
+        badsize: values[15],
     };
     new Recorder(root, strings);
 };

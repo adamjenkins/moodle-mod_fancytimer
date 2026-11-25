@@ -65,6 +65,10 @@ class restore_fancytimer_activity_structure_step extends restore_activity_struct
         $record->intro = (string)($data->intro ?? '');
         $record->introformat = (int)($data->introformat ?? FORMAT_HTML);
         $record->rotationenabled = empty($data->rotationenabled) ? 0 : 1;
+        // A recording key keeps its old id until after_execute(), as segment sounds do.
+        $oldrecordingid = sounds::recording_id($data->startsound ?? null);
+        $record->startsound = $oldrecordingid > 0 ? sounds::RECORDING_PREFIX . $oldrecordingid
+            : sounds::clean_start($data->startsound ?? null, 0);
         $record->timecreated = (int)($data->timecreated ?? time());
         $record->timemodified = time();
         $newid = $DB->insert_record('fancytimer', $record);
@@ -139,6 +143,14 @@ class restore_fancytimer_activity_structure_step extends restore_activity_struct
             if ($sound !== $row->sound) {
                 $DB->set_field('fancytimer_segments', 'sound', $sound, ['id' => $row->id]);
             }
+        }
+
+        $startsound = (string)$DB->get_field('fancytimer', 'startsound', ['id' => $fancytimerid]);
+        $oldrecordingid = sounds::recording_id($startsound);
+        if ($oldrecordingid) {
+            $newrecordingid = (int)$this->get_mappingid('recording', $oldrecordingid);
+            $startsound = $newrecordingid ? sounds::RECORDING_PREFIX . $newrecordingid : sounds::NONE;
+            $DB->set_field('fancytimer', 'startsound', $startsound, ['id' => $fancytimerid]);
         }
     }
 }

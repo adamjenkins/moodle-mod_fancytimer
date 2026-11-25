@@ -192,6 +192,17 @@ final class recordings_test extends \advanced_testcase {
     }
 
     /**
+     * The other names browsers give uploaded files' types are stored as the accepted type.
+     */
+    public function test_save_type_aliases(): void {
+        foreach (['audio/x-wav' => 'wav', 'audio/mp3' => 'mp3', 'audio/x-m4a' => 'm4a'] as $type => $extension) {
+            $record = $this->save($type, 'bytes');
+            $url = recordings::url($this->context, (int)$record->id);
+            $this->assertStringEndsWith('recording-' . $record->id . '.' . $extension, $url->out(false));
+        }
+    }
+
+    /**
      * Deleting a recording resets the segments using it to chime and removes its file.
      */
     public function test_delete(): void {
@@ -205,8 +216,11 @@ final class recordings_test extends \advanced_testcase {
         $DB->set_field('fancytimer_segments', 'sound', 'rec:' . $kept->id, ['id' => $second->id]);
         $DB->set_field('fancytimer_segments', 'sound', 'klaxon', ['id' => $third->id]);
 
+        $DB->set_field('fancytimer', 'startsound', 'rec:' . $gone->id, ['id' => $this->timer->id]);
+
         recordings::delete($this->context, $gone);
 
+        $this->assertSame('none', $DB->get_field('fancytimer', 'startsound', ['id' => $this->timer->id]));
         $this->assertFalse($DB->record_exists('fancytimer_recordings', ['id' => $gone->id]));
         $this->assertTrue(get_file_storage()->is_area_empty($this->context->id, 'mod_fancytimer', 'recording', $gone->id));
         $this->assertNull(recordings::url($this->context, (int)$gone->id));

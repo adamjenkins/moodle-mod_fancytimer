@@ -125,6 +125,7 @@ final class backup_restore_test extends \advanced_testcase {
         );
         $list = segments::get_segments((int)$timer->id);
         $DB->set_field('fancytimer_segments', 'sound', 'rec:' . $recording->id, ['id' => $list[1]->id]);
+        $DB->set_field('fancytimer', 'startsound', 'rec:' . $recording->id, ['id' => $timer->id]);
         get_file_storage()->create_file_from_string([
             'contextid' => $context->id,
             'component' => 'mod_fancytimer',
@@ -190,6 +191,7 @@ final class backup_restore_test extends \advanced_testcase {
         $this->assertSame('Next person, please', $newrecording->name);
         $this->assertEquals($USER->id, $newrecording->userid);
         $this->assertSame('rec:' . $newrecording->id, $newsegments[1]->sound);
+        $this->assertSame('rec:' . $newrecording->id, $new->startsound);
 
         // Files land in the new context under the new item ids.
         $fs = get_file_storage();

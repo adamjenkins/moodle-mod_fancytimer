@@ -54,7 +54,7 @@ final class display_config_test extends \advanced_testcase {
         $config = display_config::build($timer, $cm, $context, true);
 
         $this->assertSame(
-            ['cmid', 'contextid', 'mode', 'looping', 'warning', 'segments', 'cyclelength', 'pollms'],
+            ['cmid', 'contextid', 'mode', 'looping', 'warning', 'startsound', 'segments', 'cyclelength', 'pollms'],
             array_keys($config)
         );
         $this->assertSame((int)$cm->id, $config['cmid']);
@@ -63,6 +63,13 @@ final class display_config_test extends \advanced_testcase {
         $this->assertSame(display_config::POLL_CONTROL_MS, $config['pollms']);
         $this->assertTrue($config['looping']);
         $this->assertSame(['enabled' => true, 'secs' => 9, 'sound' => 'pulse'], $config['warning']);
+        $this->assertSame(['type' => 'none'], $config['startsound']);
+        $timer->startsound = 'gong';
+        $this->assertSame(
+            ['type' => 'builtin', 'key' => 'gong'],
+            display_config::build($timer, $cm, $context, true)['startsound']
+        );
+        $timer->startsound = null;
         $this->assertSame(390, $config['cyclelength']);
 
         $first = $config['segments'][0];

@@ -28,6 +28,7 @@ require_once(__DIR__ . '/lib.php');
 use mod_fancytimer\form\segments_form;
 use mod_fancytimer\local\recordings;
 use mod_fancytimer\local\segments;
+use mod_fancytimer\local\sounds;
 
 $id = required_param('id', PARAM_INT);
 [$course, $cm] = get_course_and_cm_from_cmid($id, 'fancytimer');
@@ -71,6 +72,7 @@ $prefill = [
     'sound' => [],
     'image' => [],
     'rotationenabled' => (int)$fancytimer->rotationenabled,
+    'startsound' => sounds::clean_start($fancytimer->startsound, $timerid),
 ];
 foreach ($segmentlist as $i => $segment) {
     $draftid = 0;
@@ -158,6 +160,7 @@ if ($data = $form->get_data()) {
     $DB->update_record('fancytimer', (object)[
         'id' => $timerid,
         'rotationenabled' => $rotationenabled,
+        'startsound' => sounds::clean_start($data->startsound ?? null, $timerid),
         'timemodified' => time(),
     ]);
     $transaction->allow_commit();
@@ -210,6 +213,8 @@ $recordercontext = [
     'hasrecordings' => !empty($recorderitems),
     'recordingurls' => json_encode((object)$recordingurls, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
     'maxseconds' => 60,
+    'maxbytes' => recordings::MAX_BYTES,
+    'maxsize' => display_size(recordings::MAX_BYTES),
     'maxrecordings' => recordings::MAX_PER_ACTIVITY,
     'defaultname' => get_string('recordingdefaultname', 'mod_fancytimer'),
     'canaddmore' => count($recordings) < recordings::MAX_PER_ACTIVITY,

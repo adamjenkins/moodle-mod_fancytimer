@@ -211,7 +211,7 @@ export const registerRecording = async(id, url, name) => {
 };
 
 /**
- * Forget a deleted recording: remove its option everywhere; selects using it go to the soft chime.
+ * Forget a deleted recording: remove its option everywhere; selects using it go to their fallback (the soft chime).
  *
  * @param {number|string} id Recording id.
  */
@@ -228,7 +228,7 @@ export const removeRecording = (id) => {
                 group.remove();
             }
             if (wasselected) {
-                select.value = DEFAULT_CHANGEOVER;
+                select.value = select.dataset.fancytimerFallback || DEFAULT_CHANGEOVER;
             }
         }
         refresh(select);

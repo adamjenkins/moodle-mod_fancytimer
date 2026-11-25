@@ -34,6 +34,7 @@ use stdClass;
  *       mode: "control" | "mirror",          // control = may run the timer; mirror = shows the published state
  *       looping: bool,
  *       warning: {enabled: bool, secs: int, sound: "tick"},
+ *       startsound: {as a segment's sound},  // played when the timer starts from the beginning
  *       segments: [{
  *         id: int, label: string (plain text), duration: int (s),
  *         bgcolour: "#rrggbb", textcolour: "#rrggbb", isrotation: bool,
@@ -90,6 +91,7 @@ class display_config {
                 'secs' => (int)$fancytimer->warningsecs,
                 'sound' => sounds::clean_warning($fancytimer->warningsound),
             ],
+            'startsound' => self::sound(sounds::clean_start($fancytimer->startsound ?? null, (int)$fancytimer->id), $context),
             'segments' => $out,
             'cyclelength' => segments::cycle_length($playlist),
             'pollms' => $cancontrol ? self::POLL_CONTROL_MS : self::POLL_MIRROR_MS,

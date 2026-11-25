@@ -41,7 +41,7 @@ class backup_fancytimer_activity_structure_step extends backup_activity_structur
     protected function define_structure() {
         $fancytimer = new backup_nested_element('fancytimer', ['id'], [
             'name', 'intro', 'introformat', 'looping', 'rotationenabled', 'warningenabled', 'warningsecs',
-            'warningsound', 'timecreated', 'timemodified',
+            'warningsound', 'startsound', 'timecreated', 'timemodified',
         ]);
 
         $segments = new backup_nested_element('segments');

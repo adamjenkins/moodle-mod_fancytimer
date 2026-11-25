@@ -38,3 +38,26 @@ Feature: Edit the segments of a Fancy Timer
     And I press "Save segments"
     Then I should see "Enter a label for this segment."
     And I should not see "Segments saved."
+
+  Scenario: Every saved segment setting is shown again when the teacher comes back
+    Given I am on the "Speaking practice" "fancytimer activity" page logged in as "teacher1"
+    And I navigate to "Segments" in current page administration
+    When I set the following fields to these values:
+      | id_startsound         | gong    |
+      | id_duration_1_minutes | 3       |
+      | id_duration_1_seconds | 45      |
+      | id_bgcolour_1         | #d2f4ea |
+      | id_textcolour_1       | #0b2545 |
+      | id_sound_1            | klaxon  |
+    And I press "Save segments"
+    And I should see "Segments saved."
+    And I am on the "Speaking practice" "fancytimer activity" page
+    And I navigate to "Segments" in current page administration
+    Then the following fields match these values:
+      | id_startsound         | gong    |
+      | id_duration_1_minutes | 3       |
+      | id_duration_1_seconds | 45      |
+      | id_bgcolour_1         | #d2f4ea |
+      | id_textcolour_1       | #0b2545 |
+      | id_sound_1            | klaxon  |
+      | id_sound_0            | chime   |
